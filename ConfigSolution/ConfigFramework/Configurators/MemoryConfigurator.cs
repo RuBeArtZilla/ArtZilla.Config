@@ -16,17 +16,24 @@ namespace ArtZilla.Config {
 			=> (T) Activator.CreateInstance(TmpCfgClass<T>.ReadOnlyType, Get<T>());
 
 		public virtual void Reset<T>() where T : IConfiguration 
-			=> _cache.AddOrUpdate(typeof(T), CreateDefault<T>, (t, cfg) => CreateDefault<T>(t));
+			=> Save(CreateDefault<T>());
 
 		public virtual void Save<T>(T value) where T : IConfiguration 
 			=> Get<T>().Copy(value);
 
-		protected virtual T Get<T>() where T : IConfiguration 
-			=> (T) _cache.GetOrAdd(typeof(T), CreateDefault<T>);
+		protected virtual T Load<T>() where T : IConfiguration
+			=> CreateDefault<T>();
 
-		protected virtual IConfiguration CreateDefault<T>(Type unusedArgument) where T : IConfiguration
+		protected virtual T Get<T>() where T : IConfiguration 
+			=> (T) _cache.GetOrAdd(typeof(T), Load<T>());
+
+		protected virtual T CreateDefault<T>() where T : IConfiguration
 			=> (T) Activator.CreateInstance(TmpCfgClass<T>.CopyType);
 
-		readonly ConcurrentDictionary<Type, IConfiguration> _cache = new ConcurrentDictionary<Type, IConfiguration>();
+		protected Type GetSimpleType<T>() where T : IConfiguration
+			=> typeof(T).IsInterface ? TmpCfgClass<T>.CopyType : typeof(T);
+
+		private readonly ConcurrentDictionary<Type, IConfiguration> _cache 
+			= new ConcurrentDictionary<Type, IConfiguration>();
 	}
 }

@@ -11,8 +11,7 @@ namespace ArtZilla.Config {
 		void Copy(IConfiguration source);
 	}
 
-	public interface IRealtimeConfiguration: IConfiguration {
-	}
+	public interface IRealtimeConfiguration: IConfiguration {	}
 
 	public class CfgIniAttribute: Attribute { }
 	public class CfgIgnoreAttribute: Attribute { }
@@ -69,21 +68,15 @@ namespace ArtZilla.Config {
 
 	public interface IAutoConfiguration<T> : IAutoConfiguration where T : IConfiguration { }
 
-	/// <summary>
-	/// Read only configuration
-	/// </summary>
+	/// <summary>Read only configuration</summary>
 	public interface IReadOnlyConfiguration : IConfiguration { }
 
-	/// <summary>
-	/// Read only configuration
-	/// </summary>
+	/// <summary>Read only configuration</summary>
 	/// <typeparam name="T">Interface that implement IConfiguration</typeparam>
 	public interface IReadOnlyConfiguration<T> : IReadOnlyConfiguration where T : IConfiguration { }
 
 	public interface IConfigurator {
-		/// <summary>
-		/// return auto-updated (automatically loading/saving) configuration 
-		/// </summary>
+		/// <summary>return auto-updated (automatically loading/saving) configuration</summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
 		T GetAuto<T>() where T : IConfiguration;
@@ -132,7 +125,8 @@ namespace ArtZilla.Config {
 				throw new InvalidOperationException(typeof(T).Name + " is not an interface");
 		}
 
-		/*static Type GenerateReadOnlyType() {
+		/*
+		static Type GenerateReadOnlyType() {
 			var tb = GetModuleBuilder().DefineType(GenerateClassName("ReadOnly"), ClassAttributes);
 
 			// Пусть реализует требуемый интерфейс
@@ -149,7 +143,8 @@ namespace ArtZilla.Config {
 			il.Emit(OpCodes.Ret);
 
 			return tb.CreateType();
-		}*/
+		}
+		*/
 
 		static ModuleBuilder GetModuleBuilder() {
 			var an = new AssemblyName("gen_" + typeof(T).Name);

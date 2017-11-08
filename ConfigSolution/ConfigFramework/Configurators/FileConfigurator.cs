@@ -1,51 +1,120 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using ArtZilla.Sharp.Lib;
 
 namespace ArtZilla.Config.Configurators {
-	public class FileConfigurator: MemoryConfigurator {
-		public bool IsUseIOThread { get; set; } = true;
+	public sealed class FileConfigurator: MemoryConfigurator {
+		public string Company { get; set; } = "SkyNet";
+
+		public string AppName { get; set; } = Assembly.GetExecutingAssembly().GetName().Name;
+
+		public IStreamSerializer Serializer { get; set; } = new SimpleXmlSerializer();
+
+		public bool IsUseIOThread {
+			get { return _isUseIOThread; }
+			set {
+				_isUseIOThread = value;
+				_repeater.Enabled(value);
+			}
+		}
+
+		public FileConfigurator() => _repeater = new BackgroundRepeater(RepeatedWrite);
 
 		public override void Save<T>(T value) {
 			base.Save(value);
 
-			GetSaveTask(value);
-
-			SaveToFile(value);
-		}
-
-		protected virtual void GetSaveTask<T>(T value) where T : IConfiguration {
 			var path = GetPath<T>();
+			var type = GetSimpleType<T>();
+			var copy = GetCopy<T>();
 
-
-		}
-		
-		protected virtual void SaveToFile<T>(T value) where T : IConfiguration {
 			if (IsUseIOThread) {
-
+				_cfgsToSave.AddOrUpdate(path, (type, copy), (key, old) => (type, copy));
+				_toSave.Add(path);
 			} else {
-
+				SaveToFile(path, type, copy);
 			}
 		}
 
-		protected virtual string GetPath<T>() where T : IConfiguration 
-			=> _paths.GetOrAdd(typeof(T), t => Path.Combine(GetDirectory<T>(), GetFileName<T>()));
-
-		protected virtual string GetPath(Type type)
-			=> _paths.GetOrAdd(type, t => Path.Combine(GetDirectory(type), GetFileName(type)));
-
-		protected virtual string GetDirectory<T>() where T : IConfiguration {
-			throw new ArgumentNullException();
+		public override void Reset<T>() {
+			Remove<T>();
+			base.Reset<T>();
 		}
 
-		protected virtual string GetDirectory(Type type) {
-			throw new ArgumentNullException();
+		private void Remove<T>() where T : IConfiguration {
+			var fi = new FileInfo(GetPath<T>());
+			if (fi.Exists)
+				fi.Delete();
 		}
 
-		protected virtual string GetFileName<T>() => typeof(T).Name;
+		protected override T Load<T>()
+			=> TryLoad<T>(out var value) ? value : base.Load<T>();
 
-		protected virtual string GetFileName(Type type) => type.Name;
+		private void RepeatedWrite(CancellationToken token) {
+			while (!token.IsCancellationRequested
+			       && _toSave.TryTake(out var path, Timeout.Infinite, token)
+				     && _cfgsToSave.TryRemove(path, out var cfg))
+				SaveToFile(path, cfg.Type, cfg.Value);
+		}
 
+		private bool TryLoad<T>(out T value) where T : IConfiguration {
+			try {
+				using (var stream = new FileStream(GetPath<T>(), FileMode.Open)) {
+					value = (T)Serializer.Deserialize(stream, GetSimpleType<T>());
+					return true;
+				}
+			} catch {
+				value = default(T);
+				return false;
+			}
+		}
+
+		private void SaveToFile(string path, Type type, IConfiguration value) {
+			CreateDirIfNotExist(path);
+			using (var stream = new FileStream(path, FileMode.Create))
+				Serializer.Serialize(stream, type, value);
+		}
+
+		private void CreateDirIfNotExist(string path) {
+			var di = new DirectoryInfo(Path.GetDirectoryName(path));
+			if (!di.Exists)
+				di.Create();
+		}
+
+		private string GetPath<T>() where T : IConfiguration
+			=> _paths.GetOrAdd(typeof(T), t => PathEx(GetDirectory<T>(), GetFileName<T>()));
+
+		private string GetPath(Type type)
+			=> _paths.GetOrAdd(type, t => PathEx(GetDirectory(type), GetFileName(type)));
+
+		private string GetDirectory<T>() where T : IConfiguration
+			=> GetDirectory(typeof(T));
+
+		private string GetDirectory(Type type)
+			=> PathEx(GetBaseDirectory(type), Company, AppName);
+
+		private string GetBaseDirectory(Type type)
+			=> Environment.GetFolderPath(IsUserOnlyConfiguration(type)
+				? Environment.SpecialFolder.LocalApplicationData
+				: Environment.SpecialFolder.CommonApplicationData);
+
+		private string GetFileName<T>() => typeof(T).Name;
+
+		private string GetFileName(Type type) => type.Name;
+
+		private string PathEx(params string[] paths)
+			=> Path.Combine(paths.Where(path => !string.IsNullOrWhiteSpace(path)).ToArray());
+
+		// todo: allow all users configuration
+		private bool IsUserOnlyConfiguration(Type type) => true;
+
+		private bool _isUseIOThread;
+		private readonly BackgroundRepeater _repeater;
+		private readonly ConcurrentDictionary<string, (Type Type, IConfiguration Value)> _cfgsToSave = new ConcurrentDictionary<string, (Type Type, IConfiguration Value)>();
+		private readonly BlockingCollection<string> _toSave = new BlockingCollection<string>();
 		private readonly ConcurrentDictionary<Type, string> _paths = new ConcurrentDictionary<Type, string>();
 	}
 }

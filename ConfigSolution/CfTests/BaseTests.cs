@@ -1,14 +1,16 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using ArtZilla.Config;
+using ArtZilla.Config.Configurators;
+using ArtZilla.Config.Tests.TestConfigurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
 	[TestClass]
 	public class BaseTests {
-		const Int32 NewInteger = 4;
-		const Double NewDouble = 8;
-		const String NewString = "15";
+		const int NewInteger = 4;
+		const double NewDouble = 8;
+		const string NewString = "15";
 
 		[TestMethod]
 		public void FirstTestMethod() {
@@ -127,17 +129,43 @@ namespace CfTests {
 
 		protected abstract T Create();
 
-		[TestMethod]
-		public void ResetTest() {
-			var ctr = Create();
+		protected virtual IEnumerable<T> CreateAllVariants() {
+			yield return Create();
+		}
 
+		protected virtual void RunAll(Action<T> testMethod) {
+			foreach (var ctr in CreateAllVariants()) {
+				Console.WriteLine("Testing " + ctr.ToString());
+				testMethod(ctr);
+			}
+		}
+
+		[TestMethod]
+		public void SimpleResetTest() => RunAll(ResetTest);
+
+		[TestMethod]
+		public void SimpleLoadTest() => RunAll(LoadTest);
+
+		[TestMethod]
+		public void SimpleSaveTest() => RunAll(SaveTest);
+		
+		[TestMethod]
+		public void ComplexResetTest() => RunAll(ResetTest);
+
+		[TestMethod]
+		public void ComplexLoadTest() => RunAll(LoadTest);
+
+		[TestMethod]
+		public void ComplexSaveTest() => RunAll(SaveTest);
+
+		protected virtual void ResetTest(T ctr) {
 			// changing configuration
 			var cfg = ctr.GetCopy<ITestConfiguration>();
 			cfg.Int32 = MagicNumber;
 			cfg.String = MagicLine;
 			ctr.Save(cfg);
 
-			// should be not in default state
+			// should not be in the default state
 			AssertCfg.IsNotDefault(ctr.GetReadOnly<ITestConfiguration>());
 
 			// reseting configuration
@@ -147,10 +175,20 @@ namespace CfTests {
 			AssertCfg.IsDefault(ctr.GetReadOnly<ITestConfiguration>());
 		}
 
-		[TestMethod]
-		public void SaveTest() {
-			var ctr = Create();
+		protected virtual void LoadTest(T ctr) {
+			var cfg = ctr.GetCopy<ITestConfiguration>();
+			cfg.Int32 = MagicNumber;
+			cfg.String = MagicLine;
+			ctr.Save(cfg);
 
+			// should not be in the default state
+			AssertCfg.IsNotDefault(ctr.GetReadOnly<ITestConfiguration>());
+
+			// should be equal
+			AssertCfg.AssertEqualProperties(cfg, ctr.GetReadOnly<ITestConfiguration>());
+		}
+
+		protected virtual void SaveTest(T ctr) {
 			ctr.Reset<ITestConfiguration>();
 			Assert.AreNotEqual(ctr.GetReadOnly<ITestConfiguration>().Int32, MagicNumber, "Change test magic number");
 			Assert.AreNotEqual(ctr.GetReadOnly<ITestConfiguration>().String, MagicLine, "Change test magic line");
@@ -163,10 +201,94 @@ namespace CfTests {
 			Assert.AreEqual(ctr.GetReadOnly<ITestConfiguration>().Int32, MagicNumber);
 			Assert.AreEqual(ctr.GetReadOnly<ITestConfiguration>().String, MagicLine);
 		}
+
+		protected virtual void ComplexResetTest(T ctr) {
+			// changing configuration
+			var cfg = ctr.GetCopy<IComplexConfig>();
+
+			cfg.ValueArray = ComplexConfig.MagicArray;
+			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
+			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
+
+			ctr.Save(cfg);
+
+			// should not be in the default state
+			AssertCfg.IsNotDefault(ctr.GetReadOnly<IComplexConfig>());
+
+			// reseting configuration
+			ctr.Reset<ITestConfiguration>();
+
+			// checking that it in default state now
+			AssertCfg.IsDefault(ctr.GetReadOnly<IComplexConfig>());
+		}
+
+		protected virtual void ComplexLoadTest(T ctr) {
+			var cfg = ctr.GetCopy<IComplexConfig>();
+
+			cfg.ValueArray = ComplexConfig.MagicArray;
+			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
+			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
+
+			ctr.Save(cfg);
+
+			// should not be in the default state
+			AssertCfg.IsNotDefault(ctr.GetReadOnly<IComplexConfig>());
+
+			// should be equal
+			AssertCfg.AssertEqualProperties(cfg, ctr.GetReadOnly<IComplexConfig>());
+		}
+
+		protected virtual void ComplexSaveTest(T ctr) {
+			ctr.Reset<IComplexConfig>();
+			Assert.IsFalse(AssertCfg.AreEquals(ctr.GetReadOnly<IComplexConfig>().ValueArray, ComplexConfig.MagicArray),
+				"Change test magic number");
+
+			var cfg = new ComplexConfig();
+
+			cfg.ValueArray = ComplexConfig.MagicArray;
+			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
+			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
+
+			ctr.Save<IComplexConfig>(cfg);
+
+			Assert.IsTrue(AssertCfg.AreEquals(ctr.GetReadOnly<IComplexConfig>().ValueArray, ComplexConfig.MagicArray));
+		}
 	}
 
 	[TestClass]
-	public class MemoryConfiguratorTestClass : ConfiguratorTestClass<MemoryConfigurator> {
+	public class MemoryCtrTestClass: ConfiguratorTestClass<MemoryConfigurator> {
 		protected override MemoryConfigurator Create() => new MemoryConfigurator();
+	}
+
+	[TestClass]
+	public class FileCtrTestClass: ConfiguratorTestClass<FileConfigurator> {
+		protected override FileConfigurator Create() => new FileConfigurator();
+
+		protected override IEnumerable<FileConfigurator> CreateAllVariants() {
+			yield return Create();
+			yield return new FileConfigurator { Company = null };
+			yield return new FileConfigurator { AppName = null };
+			yield return new FileConfigurator { Company = null, AppName = null };
+			yield return new FileConfigurator { Company = "" };
+			yield return new FileConfigurator { AppName = "" };
+			yield return new FileConfigurator { Company = "", AppName = "" };
+		}
+
+		[TestMethod]
+		public virtual void MultipleInstancesLoadTest() {
+			var saver = Create();
+			var cfg = saver.GetCopy<ITestConfiguration>();
+			cfg.Int32 = MagicNumber;
+			cfg.String = MagicLine;
+			saver.Save(cfg);
+
+			// should not be in the default state
+			AssertCfg.IsNotDefault(saver.GetReadOnly<ITestConfiguration>());
+
+			var loader = Create();
+
+			// should be equal
+			AssertCfg.AssertEqualProperties(saver.GetReadOnly<ITestConfiguration>(), loader.GetReadOnly<ITestConfiguration>());
+		}
 	}
 }
