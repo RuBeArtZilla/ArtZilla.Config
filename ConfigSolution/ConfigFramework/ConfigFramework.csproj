@@ -1,65 +1,79 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F0272B4C-10AE-4BD1-8B65-09ABEABFAA90}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ArtZilla.Config</RootNamespace>
-    <AssemblyName>ArtZilla.Config</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>ConfigFramework.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>ConfigFramework.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="ArtZilla.Sharp.Lib, Version=1.1.0.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ArtZilla.Sharp.Lib.1.1.0.2\lib\4.0\ArtZilla.Sharp.Lib.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.ValueTuple, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.3.1\lib\portable-net40+sl4+win8+wp8\System.ValueTuple.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Builders\AutoConfigTypeBuilder.cs" />
-    <Compile Include="Builders\ConfigTypeBuilder.cs" />
-    <Compile Include="Configurators\FileConfigurator.cs" />
-    <Compile Include="Serializers\IStreamSerializer.cs" />
-    <Compile Include="Serializers\SimpleXmlSerializer.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="IConfiguration.cs" />
-    <Compile Include="Configurators\MemoryConfigurator.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ConfigFramework.ruleset" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net40;net45;netstandard2.0</TargetFrameworks>
+
+		<RuntimeIdentifiers>win7-x86;win7-x64</RuntimeIdentifiers>
+		<Authors>ArtZilla</Authors>
+		<RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+		<ProjectGuid>{F0272B4C-10AE-4BD1-8B65-09ABEABFAA90}</ProjectGuid>
+		<OutputType>Library</OutputType>
+
+		<LangVersion>latest</LangVersion>
+		<WarningLevel>4</WarningLevel>
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+
+		<Language>en-US</Language>
+		<NeutralLanguage>en-US</NeutralLanguage>
+
+		<PackageId>ArtZilla.Config</PackageId>
+		<AssemblyName>ArtZilla.Config</AssemblyName>
+		<RootNamespace>ArtZilla.Config</RootNamespace>
+
+		<AssemblyTitle>Configuration Framework</AssemblyTitle>
+		<Description>Configuration Framework</Description>
+		<Summary>Configuration Framework</Summary>
+
+		<PackageCopyright>Copyright (c) 2017 Artyom Fomin</PackageCopyright>
+		<PackageTags>ArtZilla, .Net, Configuration Framework</PackageTags>
+		<PackageReleaseNotes>First version</PackageReleaseNotes>
+		<PackageIconUrl>https://files.artzilla.name/ArtZilla.Config/Icon.png</PackageIconUrl>
+		<PackageProjectUrl>https://files.artzilla.name/ArtZilla.Config</PackageProjectUrl>
+		<PackageLicenseUrl>https://files.artzilla.name/ArtZilla.Config/License.txt</PackageLicenseUrl>
+
+		<Copyright>Copyright (c) 2017 Artyom Fomin</Copyright>
+		<RepositoryType>Github</RepositoryType>
+		<Company>ArtZilla's development</Company>
+		<Version>0.1.0.2</Version>
+		<FileVersion>0.1.0.2</FileVersion>
+		<AssemblyVersion>0.1.0.2</AssemblyVersion>
+		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>DEBUG;</DefineConstants>
+		<IncludeSymbols>true</IncludeSymbols>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<DefineConstants>RELEASE</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
+		<DefineConstants>NET40;NETFULL</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
+		<DefineConstants>NET45;NETFULL</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+		<DefineConstants>NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
+	<!-- Common NuGet Packages -->
+	<ItemGroup>
+		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.8" />
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40'">
+		
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />			
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+	</ItemGroup>
 </Project>

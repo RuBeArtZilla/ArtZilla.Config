@@ -36,15 +36,29 @@ namespace ArtZilla.Config.Builders {
 
 			AddInterfaces();
 			AddConstructors();
+
+#if NET40
 			return Tb.CreateType();
+#else
+			var ti = Tb.CreateTypeInfo();
+			return ti.AsType();
+#endif
 		}
 
 		protected virtual ModuleBuilder CreateModuleBuilder() {
 			var an = new AssemblyName("gen_" + typeof(T).Name);
+			/* var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
+			var moduleName = Path.ChangeExtension(an.Name, "dll");
+			return asm.DefineDynamicModule(moduleName, false);*/
+#if NET40
 			var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
-
 			var moduleName = Path.ChangeExtension(an.Name, "dll");
 			return asm.DefineDynamicModule(moduleName, false);
+#else
+			var asm = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+			var moduleName = Path.ChangeExtension(an.Name, "dll");
+			return asm.DefineDynamicModule(moduleName);
+#endif
 		}
 
 		protected virtual TypeBuilder CreateTypeBuilder()

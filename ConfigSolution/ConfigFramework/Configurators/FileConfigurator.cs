@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using ArtZilla.Sharp.Lib;
+using ArtZilla.Net.Core;
 
 namespace ArtZilla.Config.Configurators {
 	public sealed class FileConfigurator: MemoryConfigurator {

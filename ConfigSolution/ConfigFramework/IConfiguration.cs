@@ -148,10 +148,16 @@ namespace ArtZilla.Config {
 
 		static ModuleBuilder GetModuleBuilder() {
 			var an = new AssemblyName("gen_" + typeof(T).Name);
-			var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
 
+#if NET40
+			var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
 			var moduleName = Path.ChangeExtension(an.Name, "dll");
 			return asm.DefineDynamicModule(moduleName, false);
+#else
+			var asm = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+			var moduleName = Path.ChangeExtension(an.Name, "dll");
+			return asm.DefineDynamicModule(moduleName);
+#endif
 		}
 
 		static String GenerateClassName(String prefix) {
