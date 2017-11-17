@@ -8,9 +8,9 @@ using ArtZilla.Net.Core;
 
 namespace ArtZilla.Config.Configurators {
 	public sealed class FileConfigurator: MemoryConfigurator {
-		public string Company { get; set; } = "SkyNet";
+		public string Company { get; set; } = ConfigManager.CompanyName;
 
-		public string AppName { get; set; } = Assembly.GetExecutingAssembly().GetName().Name;
+		public string AppName { get; set; } = ConfigManager.AppName;
 
 		public IStreamSerializer Serializer { get; set; } = new SimpleXmlSerializer();
 

@@ -9,6 +9,10 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 		Dictionary<int, string> ValueDictionary { get; set; }
 	}
 
+	public interface IMediaLibraryConfiguration: IConfiguration {
+		List<string> Paths { get; }
+	}
+
 	public class ComplexConfig: IComplexConfig {
 		public static readonly int[] DefaultArray = { 0, 1, 2, 3, 4, 5, 6, 7 };
 		public static readonly Dictionary<int, string> DefaultDictionary

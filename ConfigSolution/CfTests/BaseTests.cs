@@ -135,7 +135,7 @@ namespace CfTests {
 
 		protected virtual void RunAll(Action<T> testMethod) {
 			foreach (var ctr in CreateAllVariants()) {
-				Console.WriteLine("Testing " + ctr.ToString());
+				Console.WriteLine("Testing " + ctr);
 				testMethod(ctr);
 			}
 		}

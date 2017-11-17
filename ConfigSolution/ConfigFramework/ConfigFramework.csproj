@@ -34,14 +34,14 @@
 		<Copyright>Copyright (c) 2017 Artyom Fomin</Copyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.0.2</Version>
-		<FileVersion>0.1.0.2</FileVersion>
-		<AssemblyVersion>0.1.0.2</AssemblyVersion>
+		<Version>0.1.0.3</Version>
+		<FileVersion>0.1.0.3</FileVersion>
+		<AssemblyVersion>0.1.0.3</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>DEBUG;</DefineConstants>
+		<DefineConstants>DEBUG</DefineConstants>
 		<IncludeSymbols>true</IncludeSymbols>
 	</PropertyGroup>
 
@@ -67,12 +67,17 @@
 		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
 	</ItemGroup>
 
+	<!-- NET Framework 4.0 NuGet Packages -->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net40'">
 		
 	</ItemGroup>
+	
+	<!-- NET Framework 4.5 NuGet Packages -->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
 		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />			
 	</ItemGroup>
+	
+	<!-- NET Standard 2.0 NuGet Packages -->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
 	</ItemGroup>
