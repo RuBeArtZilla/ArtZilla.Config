@@ -14,15 +14,24 @@ namespace ArtZilla.Config.Configurators {
 
 		public IStreamSerializer Serializer { get; set; } = new SimpleXmlSerializer();
 
+		public TimeSpan IoThreadCooldown {
+			get => _ioThread.Cooldown;
+			set => _ioThread.Cooldown = value;
+		}
+
 		public bool IsUseIOThread {
-			get { return _isUseIOThread; }
+			get => _isUseIOThread;
 			set {
 				_isUseIOThread = value;
-				_repeater.Enabled(value);
+				_ioThread.Enabled(value);
 			}
 		}
 
-		public FileConfigurator() => _repeater = new BackgroundRepeater(RepeatedWrite);
+		public FileConfigurator()
+			=> _ioThread = new BackgroundRepeater(RepeatedWrite);
+
+		public FileConfigurator(bool useIoThread)
+			=> _ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), useIoThread);
 
 		public override void Save<T>(T value) {
 			base.Save(value);
@@ -44,6 +53,13 @@ namespace ArtZilla.Config.Configurators {
 			base.Reset<T>();
 		}
 
+		public void Flush() {
+			if (!IsUseIOThread)
+				return;
+
+			SpinWait.SpinUntil(() => _cfgsToSave.Count == 0);
+		}
+
 		private void Remove<T>() where T : IConfiguration {
 			var fi = new FileInfo(GetPath<T>());
 			if (fi.Exists)
@@ -56,8 +72,9 @@ namespace ArtZilla.Config.Configurators {
 		private void RepeatedWrite(CancellationToken token) {
 			while (!token.IsCancellationRequested
 			       && _toSave.TryTake(out var path, Timeout.Infinite, token)
-				     && _cfgsToSave.TryRemove(path, out var cfg))
+				     && _cfgsToSave.TryRemove(path, out var cfg)) {
 				SaveToFile(path, cfg.Type, cfg.Value);
+			}
 		}
 
 		private bool TryLoad<T>(out T value) where T : IConfiguration {
@@ -111,8 +128,9 @@ namespace ArtZilla.Config.Configurators {
 		// todo: allow all users configuration
 		private bool IsUserOnlyConfiguration(Type type) => true;
 
-		private bool _isUseIOThread;
-		private readonly BackgroundRepeater _repeater;
+		private bool _isSaving = false;
+		private bool _isUseIOThread = true;
+		private readonly BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<string, (Type Type, IConfiguration Value)> _cfgsToSave = new ConcurrentDictionary<string, (Type Type, IConfiguration Value)>();
 		private readonly BlockingCollection<string> _toSave = new BlockingCollection<string>();
 		private readonly ConcurrentDictionary<Type, string> _paths = new ConcurrentDictionary<Type, string>();

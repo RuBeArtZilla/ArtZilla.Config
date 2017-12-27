@@ -21,8 +21,8 @@ namespace ArtZilla.Config {
 			_ctor = null;
 		}
 
-		public static IConfigurator GetDefaultConfigurator() 
-			=> (IConfigurator)(_ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes)).Invoke(null));
+		public static IConfigurator GetDefaultConfigurator()
+			=> (IConfigurator) ((_ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes))).Invoke(null));
 
 		private static ConstructorInfo _ctor;
 		private static Type _configurator = typeof(MemoryConfigurator);

@@ -281,6 +281,7 @@ namespace CfTests {
 			cfg.Int32 = MagicNumber;
 			cfg.String = MagicLine;
 			saver.Save(cfg);
+			saver.Flush();
 
 			// should not be in the default state
 			AssertCfg.IsNotDefault(saver.GetReadOnly<ITestConfiguration>());
