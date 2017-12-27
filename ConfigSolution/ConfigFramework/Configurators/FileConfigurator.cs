@@ -8,6 +8,8 @@ using ArtZilla.Net.Core;
 
 namespace ArtZilla.Config.Configurators {
 	public sealed class FileConfigurator: MemoryConfigurator {
+		public const bool DefaultIsUseIoThread = false;
+
 		public string Company { get; set; } = ConfigManager.CompanyName;
 
 		public string AppName { get; set; } = ConfigManager.AppName;
@@ -27,8 +29,7 @@ namespace ArtZilla.Config.Configurators {
 			}
 		}
 
-		public FileConfigurator()
-			=> _ioThread = new BackgroundRepeater(RepeatedWrite);
+		public FileConfigurator() : this(DefaultIsUseIoThread) { }
 
 		public FileConfigurator(bool useIoThread)
 			=> _ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), useIoThread);
@@ -57,7 +58,7 @@ namespace ArtZilla.Config.Configurators {
 			if (!IsUseIOThread)
 				return;
 
-			SpinWait.SpinUntil(() => _cfgsToSave.Count == 0);
+			SpinWait.SpinUntil(() => _toSave.Count == 0 && _cfgsToSave.Count == 0 && !_isSaving);
 		}
 
 		private void Remove<T>() where T : IConfiguration {
@@ -71,8 +72,8 @@ namespace ArtZilla.Config.Configurators {
 
 		private void RepeatedWrite(CancellationToken token) {
 			while (!token.IsCancellationRequested
-			       && _toSave.TryTake(out var path, Timeout.Infinite, token)
-				     && _cfgsToSave.TryRemove(path, out var cfg)) {
+						 && _toSave.TryTake(out var path, Timeout.Infinite, token)
+						 && _cfgsToSave.TryRemove(path, out var cfg)) {
 				SaveToFile(path, cfg.Type, cfg.Value);
 			}
 		}
@@ -90,9 +91,14 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		private void SaveToFile(string path, Type type, IConfiguration value) {
-			CreateDirIfNotExist(path);
-			using (var stream = new FileStream(path, FileMode.Create))
-				Serializer.Serialize(stream, type, value);
+			try {
+				_isSaving = true;
+				CreateDirIfNotExist(path);
+				using (var stream = new FileStream(path, FileMode.Create))
+					Serializer.Serialize(stream, type, value);
+			} finally {
+				_isSaving = false;
+			}
 		}
 
 		private void CreateDirIfNotExist(string path) {
@@ -128,8 +134,8 @@ namespace ArtZilla.Config.Configurators {
 		// todo: allow all users configuration
 		private bool IsUserOnlyConfiguration(Type type) => true;
 
-		private bool _isSaving = false;
-		private bool _isUseIOThread = true;
+		private bool _isSaving;
+		private bool _isUseIOThread = DefaultIsUseIoThread;
 		private readonly BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<string, (Type Type, IConfiguration Value)> _cfgsToSave = new ConcurrentDictionary<string, (Type Type, IConfiguration Value)>();
 		private readonly BlockingCollection<string> _toSave = new BlockingCollection<string>();
