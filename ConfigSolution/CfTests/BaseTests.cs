@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using ArtZilla.Config;
 using ArtZilla.Config.Configurators;
 using ArtZilla.Config.Tests.TestConfigurations;
@@ -42,6 +43,26 @@ namespace CfTests {
 			var cfr = ConfigManager.GetDefaultConfigurator();
 			var cfg = cfr.GetReadOnly<ITestConfiguration>();
 			Assert.ThrowsException<ReadOnlyException>(() => cfg.Int32 = 1);
+		}
+
+		[TestMethod]
+		public void AutoConfigurationCreationTest() {
+			var cfr = ConfigManager.GetDefaultConfigurator();
+			var cfg = cfr.GetAuto<ITestConfiguration>();
+			var inpc = cfg as INotifyPropertyChanged;
+			Assert.IsNotNull(inpc, nameof(IConfigurator.GetAuto) + " not realized INPC");
+		}
+
+		[TestMethod]
+		public void AutoConfigurationEventTest() {
+			var cfr = ConfigManager.GetDefaultConfigurator();
+			var cfg = cfr.GetAuto<ITestConfiguration>();
+			var inpc = (INotifyPropertyChanged) cfg;
+			var changed = false;
+			void Inpc_PropertyChanged(object sender, PropertyChangedEventArgs e) => changed = true;
+			inpc.PropertyChanged += Inpc_PropertyChanged;
+			cfg.Int32 = 172;
+			Assert.IsTrue(changed, nameof(INotifyPropertyChanged.PropertyChanged) + " not invoked");
 		}
 
 		[TestMethod]
@@ -281,6 +302,7 @@ namespace CfTests {
 			cfg.Int32 = MagicNumber;
 			cfg.String = MagicLine;
 			saver.Save(cfg);
+			saver.Flush();
 
 			// should not be in the default state
 			AssertCfg.IsNotDefault(saver.GetReadOnly<ITestConfiguration>());

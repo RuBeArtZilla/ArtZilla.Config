@@ -10,7 +10,7 @@ namespace ArtZilla.Config.Configurators {
 		public void Serialize(Stream stream, Type type, object obj)
 			=> GetSerializer(type).Serialize(stream, obj);
 
-		private XmlSerializer GetSerializer(Type type) 
+		private XmlSerializer GetSerializer(Type type)
 			=> new XmlSerializer(type);
 	}
 

@@ -1,153 +1,111 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace ArtZilla.Config.Builders {
-	public class AutoConfigTypeBuilder<T>: ConfigTypeBuilder<T> where T : IConfiguration {
+	public static class PropertyChangedInvoker {
+		public static void Invoke(INotifyPropertyChanged sender, PropertyChangedEventHandler source, string propertyName)
+			=> source?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
+	}
+
+	public class AutoConfigTypeBuilder<T>: CopyConfigTypeBuilder<T> where T : IConfiguration {
 		protected override String ClassPrefix => "Auto";
 
-		protected override void AddProperty(PropertyInfo pi) {
-			// using this field to store property values
-			var fb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
-
-			var dv = pi.GetCustomAttributes(typeof(DefaultValueAttribute), true).OfType<DefaultValueAttribute>().FirstOrDefault();
-			if (dv != null)
-				AddDefaultFieldValue(fb, dv.Value);
-
-			base.AddProperty(pi);
-		}
-
-		protected override void ImplementPropertyGetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, fb);
-			il.Emit(OpCodes.Ret);
-		}
-
-		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Stfld, fb);
-			il.Emit(OpCodes.Ret);
-		}
-	}
-
-	public class AutoCopyConfigTypeBuilder<T>: ConfigTypeBuilder<T> where T : IConfiguration {
-		protected override String ClassPrefix => "AutoCopy";
-
-		protected override void AddProperty(PropertyInfo pi) {
-			// using this field to store property values
-			var fb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
-
-			var dv = pi.GetCustomAttributes(typeof(DefaultValueAttribute), true).OfType<DefaultValueAttribute>().FirstOrDefault();
-			if (dv != null)
-				AddDefaultFieldValue(fb, dv.Value);
-
-			base.AddProperty(pi);
-		}
-
-		protected override void ImplementPropertyGetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, fb);
-			il.Emit(OpCodes.Ret);
-		}
-
-		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Stfld, fb);
-			il.Emit(OpCodes.Ret);
-		}
-	}
-
-	public class ReadOnlyConfigTypeBuilder<T>: ConfigTypeBuilder<T> where T : IConfiguration {
-		protected override String ClassPrefix => "ReadOnly";
-
 		protected override void AddInterfaces() {
+			AddInpcImplementation();
 			base.AddInterfaces();
-
-			Tb.AddInterfaceImplementation(typeof(IReadOnlyConfiguration));
-			Tb.AddInterfaceImplementation(typeof(IReadOnlyConfiguration<T>));
 		}
 
-		protected override void AddProperty(PropertyInfo pi) {
-			// using this field to store property values
-			var fb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
+		protected virtual void AddInpcImplementation() {
+			// todo: refactor this method?
 
-			var dv = pi.GetCustomAttributes(typeof(DefaultValueAttribute), true).OfType<DefaultValueAttribute>().FirstOrDefault();
-			if (dv != null)
-				AddDefaultFieldValue(fb, dv.Value);
+			Tb.AddInterfaceImplementation(typeof(INotifyPropertyChanged));
 
-			base.AddProperty(pi);
+			var field = Tb.DefineField(
+				"PropertyChanged",
+				typeof(PropertyChangedEventHandler),
+				FieldAttributes.Private);
+
+			var eventInfo = Tb.DefineEvent(
+				"PropertyChanged",
+				EventAttributes.None,
+				typeof(PropertyChangedEventHandler));
+			
+			{
+				var ibaseMethod = typeof(INotifyPropertyChanged).GetMethod("add_PropertyChanged");
+				var addMethod = Tb.DefineMethod("add_PropertyChanged",
+						ibaseMethod.Attributes ^ MethodAttributes.Abstract,
+						ibaseMethod.CallingConvention,
+						ibaseMethod.ReturnType,
+						new[] { typeof(PropertyChangedEventHandler) });
+				var generator = addMethod.GetILGenerator();
+				var combine = typeof(Delegate).GetMethod("Combine", new[] { typeof(Delegate), typeof(Delegate) });
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldfld, field);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Call, combine);
+				generator.Emit(OpCodes.Castclass, typeof(PropertyChangedEventHandler));
+				generator.Emit(OpCodes.Stfld, field);
+				generator.Emit(OpCodes.Ret);
+				eventInfo.SetAddOnMethod(addMethod);
+			}
+
+			{
+				var ibaseMethod = typeof(INotifyPropertyChanged).GetMethod("remove_PropertyChanged");
+				var removeMethod = Tb.DefineMethod("remove_PropertyChanged",
+						ibaseMethod.Attributes ^ MethodAttributes.Abstract,
+						ibaseMethod.CallingConvention,
+						ibaseMethod.ReturnType,
+						new[] { typeof(PropertyChangedEventHandler) });
+				var remove = typeof(Delegate).GetMethod("Remove", new[] { typeof(Delegate), typeof(Delegate) });
+				var generator = removeMethod.GetILGenerator();
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldfld, field);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Call, remove);
+				generator.Emit(OpCodes.Castclass, typeof(PropertyChangedEventHandler));
+				generator.Emit(OpCodes.Stfld, field);
+				generator.Emit(OpCodes.Ret);
+				eventInfo.SetRemoveOnMethod(removeMethod);
+			}
+
+			{
+				var methodBuilder = Tb.DefineMethod("OnPropertyChanged",
+					MethodAttributes.Family | MethodAttributes.Virtual | MethodAttributes.HideBySig |
+					MethodAttributes.NewSlot, CallingConventions.Standard | CallingConventions.HasThis, typeof(void),
+					new[] { typeof(string) });
+				var generator = methodBuilder.GetILGenerator();
+				var returnLabel = generator.DefineLabel();
+				generator.DeclareLocal(typeof(PropertyChangedEventHandler));
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldfld, field);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Call, typeof(PropertyChangedInvoker).GetMethod("Invoke"));
+				generator.MarkLabel(returnLabel);
+				generator.Emit(OpCodes.Ret);
+				eventInfo.SetRaiseMethod(methodBuilder);
+				_onPropertyChangedMethod = methodBuilder.GetBaseDefinition();
+			}
 		}
 
-		protected override void ImplementPropertyGetMethod(PropertyInfo pi, 
-			                                                 PropertyBuilder pb, 
-																											 MethodInfo mi, 
-																											 MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, fb);
-			il.Emit(OpCodes.Ret);
-		}
-
-		protected override void ImplementPropertySetMethod(PropertyInfo pi, 
-			                                                 PropertyBuilder pb, 
-																											 MethodInfo mi, 
-																											 MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldstr, "Can't modify a property " + pi.Name + " in a read-only implementation of " + typeof(T).Name + ".");
-			il.Emit(OpCodes.Newobj, typeof(ReadOnlyException).GetConstructor(new Type[] { typeof(String) }));
-			il.Emit(OpCodes.Throw);
-		}
-	}
-
-	public class CopyConfigTypeBuilder<T>: ConfigTypeBuilder<T> where T : IConfiguration {
-		protected override String ClassPrefix => "Copy";
-
-		protected override void AddProperty(PropertyInfo pi) {
-			// using this field to store property values
-			var fb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
-
-			var dv = pi.GetCustomAttributes(typeof(DefaultValueAttribute), true).OfType<DefaultValueAttribute>().FirstOrDefault();
-			if (dv != null)
-				AddDefaultFieldValue(fb, dv.Value);
-
-			base.AddProperty(pi);
-		}
-
-		protected override void ImplementPropertyGetMethod(PropertyInfo pi,
-																											 PropertyBuilder pb,
-																											 MethodInfo mi,
-																											 MethodBuilder mb) {
-			var fb = GetPrivateField(GetFieldName(pi));
-			var il = mb.GetILGenerator();
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, fb);
-			il.Emit(OpCodes.Ret);
-		}
-
-		protected override void ImplementPropertySetMethod(PropertyInfo pi,
-																											 PropertyBuilder pb,
-																											 MethodInfo mi,
-																											 MethodBuilder mb) {
+		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Stfld, fb);
+
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldstr, pi.Name);
+			il.Emit(OpCodes.Call, _onPropertyChangedMethod);
 			il.Emit(OpCodes.Ret);
 		}
+
+		protected MethodInfo _onPropertyChangedMethod;
 	}
 }

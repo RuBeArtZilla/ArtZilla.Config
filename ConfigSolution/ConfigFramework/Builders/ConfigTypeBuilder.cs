@@ -8,14 +8,6 @@ using System.Reflection.Emit;
 using System.Runtime.Serialization;
 
 namespace ArtZilla.Config.Builders {
-	[Serializable]
-	public class BuildException : Exception {
-		public BuildException() { }
-		public BuildException(string message) : base(message) { }
-		public BuildException(string message, Exception inner) : base(message, inner) { }
-		protected BuildException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-	}
-
 	public abstract class ConfigTypeBuilder<T> where T : IConfiguration {
 		protected virtual TypeAttributes ClassAttributes
 			=> TypeAttributes.Class
@@ -104,14 +96,14 @@ namespace ArtZilla.Config.Builders {
 			foreach (var pi in typeof(T).GetProperties()) {
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
-				
+		
 				il.Emit(OpCodes.Callvirt, pi.GetGetMethod());
 				il.Emit(OpCodes.Call, pi.GetSetMethod());
 			}
 
 			il.Emit(OpCodes.Ret);
 
-			Tb.DefineMethodOverride(mb, mi);	
+			Tb.DefineMethodOverride(mb, mi);
 		}
 
 		protected virtual void AddConstructors() {
