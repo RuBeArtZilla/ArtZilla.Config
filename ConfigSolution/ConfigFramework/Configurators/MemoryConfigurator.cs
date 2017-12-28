@@ -33,7 +33,9 @@ namespace ArtZilla.Config.Configurators {
 		/// <returns><see cref="INotifyingConfiguration" /> implementation of actual <typeparamref name="TConfiguration" /></returns>
 		public virtual TConfiguration GetNotifying<TConfiguration>()
 			where TConfiguration : IConfiguration
-			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get<TConfiguration>());
+			=> (TConfiguration)Activator.CreateInstance(
+				TmpCfgClass<TConfiguration>.NotifyingType, 
+				Get<TConfiguration>());
 
 		/// <summary>
 		/// Method return actual <typeparamref name="TConfiguration" /> with <see cref="IRealtimeConfiguration" /> implementation

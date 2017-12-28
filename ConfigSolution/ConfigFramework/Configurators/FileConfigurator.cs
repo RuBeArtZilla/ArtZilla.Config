@@ -107,10 +107,10 @@ namespace ArtZilla.Config.Configurators {
 		private bool TryLoad<T>(out T value) where T : IConfiguration {
 			try {
 				using (var stream = new FileStream(GetPath<T>(), FileMode.Open)) {
-					value = (T)Serializer.Deserialize(stream, GetSimpleType<T>());
-					var cfg = (T)Activator.CreateInstance(TmpCfgClass<T>.RealtimeType);
-					cfg.Copy(value);
-					Subscribe(cfg);
+					var loaded = (T)Serializer.Deserialize(stream, GetSimpleType<T>());
+					value = (T)Activator.CreateInstance(TmpCfgClass<T>.RealtimeType);
+					value.Copy(loaded);
+					Subscribe(value);
 					return true;
 				}
 			} catch {
