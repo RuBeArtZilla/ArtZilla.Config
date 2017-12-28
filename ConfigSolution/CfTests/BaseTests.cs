@@ -47,20 +47,20 @@ namespace CfTests {
 
 		[TestMethod]
 		public void AutoConfigurationCreationTest() {
-			var cfr = ConfigManager.GetDefaultConfigurator();
-			var cfg = cfr.GetAuto<ITestConfiguration>();
-			var inpc = cfg as INotifyPropertyChanged;
-			Assert.IsNotNull(inpc, nameof(IConfigurator.GetAuto) + " not realized INPC");
+			var cfg = ConfigManager.GetAuto<ITestConfiguration>();
+
+			Assert.IsNotNull(cfg);
+			Assert.IsInstanceOfType(cfg, typeof(ITestConfiguration));
+			Assert.IsInstanceOfType(cfg, typeof(IAutoConfiguration));
 		}
 
 		[TestMethod]
 		public void AutoConfigurationEventTest() {
-			var cfr = ConfigManager.GetDefaultConfigurator();
-			var cfg = cfr.GetAuto<ITestConfiguration>();
-			var inpc = (INotifyPropertyChanged) cfg;
+			var cfg = ConfigManager.GetAuto<ITestConfiguration>();
+			var auto = (IAutoConfiguration) cfg;
 			var changed = false;
 			void Inpc_PropertyChanged(object sender, PropertyChangedEventArgs e) => changed = true;
-			inpc.PropertyChanged += Inpc_PropertyChanged;
+			auto.PropertyChanged += Inpc_PropertyChanged;
 			cfg.Int32 = 172;
 			Assert.IsTrue(changed, nameof(INotifyPropertyChanged.PropertyChanged) + " not invoked");
 		}
@@ -72,6 +72,7 @@ namespace CfTests {
 
 			CheckIsDefault(cfr.GetCopy<ITestConfiguration>());
 			CheckIsDefault(cfr.GetAuto<ITestConfiguration>());
+			CheckIsDefault(cfr.GetRealtime<ITestConfiguration>());
 			CheckIsDefault(cfr.GetAutoCopy<ITestConfiguration>());
 			CheckIsDefault(cfr.GetReadOnly<ITestConfiguration>());
 		}
@@ -124,7 +125,6 @@ namespace CfTests {
 
 			Assert.IsInstanceOfType(cfg, typeof(ITestConfiguration));
 			Assert.IsInstanceOfType(cfg, typeof(IReadOnlyConfiguration));
-			Assert.IsInstanceOfType(cfg, typeof(IReadOnlyConfiguration<ITestConfiguration>));
 		}
 
 		[TestMethod]

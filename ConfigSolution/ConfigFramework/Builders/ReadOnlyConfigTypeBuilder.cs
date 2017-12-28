@@ -11,7 +11,6 @@ namespace ArtZilla.Config.Builders {
 			base.AddInterfaces();
 
 			Tb.AddInterfaceImplementation(typeof(IReadOnlyConfiguration));
-			Tb.AddInterfaceImplementation(typeof(IReadOnlyConfiguration<T>));
 		}
 
 		protected override void AddProperty(PropertyInfo pi) {

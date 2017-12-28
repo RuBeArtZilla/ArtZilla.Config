@@ -34,7 +34,7 @@ namespace ArtZilla.Config {
 			=> _ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes));
 
 		public static TConfiguration GetAuto<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetAuto<TConfiguration>();
+			=> GetDefaultConfigurator().GetRealtime<TConfiguration>();
 
 		public static TConfiguration GetAutoCopy<TConfiguration>() where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().GetAutoCopy<TConfiguration>();

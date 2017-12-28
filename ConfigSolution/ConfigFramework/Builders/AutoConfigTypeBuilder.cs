@@ -22,6 +22,7 @@ namespace ArtZilla.Config.Builders {
 			// todo: refactor this method?
 
 			Tb.AddInterfaceImplementation(typeof(INotifyPropertyChanged));
+			Tb.AddInterfaceImplementation(typeof(IAutoConfiguration));
 
 			var field = Tb.DefineField(
 				"PropertyChanged",
