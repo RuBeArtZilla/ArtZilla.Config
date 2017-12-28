@@ -34,9 +34,9 @@
 		<Copyright>Copyright (c) 2017 Artyom Fomin</Copyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.0.7</Version>
-		<FileVersion>0.1.0.7</FileVersion>
-		<AssemblyVersion>0.1.0.7</AssemblyVersion>
+		<Version>0.1.0.9</Version>
+		<FileVersion>0.1.0.9</FileVersion>
+		<AssemblyVersion>0.1.0.9</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 	</PropertyGroup>
 
@@ -49,6 +49,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<DefineConstants>RELEASE</DefineConstants>
+		<IncludeSymbols>true</IncludeSymbols>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">

@@ -51,6 +51,9 @@ namespace CfTests {
 			var other = ctr2.GetReadonly<ITestConfiguration>();
 			Assert.AreEqual(message, cfg.String, "realtime config not changed");
 			Assert.AreEqual(message, other.String, "readonly config not actual");
+
+			ctr1.Reset<ITestConfiguration>();
+			ctr2.Reset<ITestConfiguration>();
 		}
 	}
 }
