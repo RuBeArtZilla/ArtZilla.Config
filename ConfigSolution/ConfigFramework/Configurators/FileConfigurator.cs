@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,14 +33,19 @@ namespace ArtZilla.Config.Configurators {
 		public FileConfigurator() : this(DefaultIsUseIoThread) { }
 
 		public FileConfigurator(bool useIoThread)
-			=> _ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), useIoThread);
+			=> _ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), (_isUseIOThread = useIoThread));
 
-		public override void Save<T>(T value) {
+		/// <summary>
+		/// Save <paramref name="value" /> as <typeparamref name="TConfiguration" />
+		/// </summary>
+		/// <typeparam name="TConfiguration"></typeparam>
+		/// <param name="value"></param>
+		public override void Save<TConfiguration>(TConfiguration value) {
 			base.Save(value);
 
-			var path = GetPath<T>();
-			var type = GetSimpleType<T>();
-			var copy = GetCopy<T>();
+			var path = GetPath<TConfiguration>();
+			var type = GetSimpleType<TConfiguration>();
+			var copy = GetCopy<TConfiguration>();
 
 			if (IsUseIOThread) {
 				_cfgsToSave.AddOrUpdate(path, (type, copy), (key, old) => (type, copy));
@@ -49,9 +55,13 @@ namespace ArtZilla.Config.Configurators {
 			}
 		}
 
-		public override void Reset<T>() {
-			Remove<T>();
-			base.Reset<T>();
+		/// <summary>
+		/// Reset <typeparamref name="TConfiguration" /> to default values
+		/// </summary>
+		/// <typeparam name="TConfiguration"></typeparam>
+		public override void Reset<TConfiguration>() {
+			Remove<TConfiguration>();
+			base.Reset<TConfiguration>();
 		}
 
 		public void Flush() {
@@ -61,14 +71,24 @@ namespace ArtZilla.Config.Configurators {
 			SpinWait.SpinUntil(() => _toSave.Count == 0 && _cfgsToSave.Count == 0 && !_isSaving);
 		}
 
-		private void Remove<T>() where T : IConfiguration {
-			var fi = new FileInfo(GetPath<T>());
-			if (fi.Exists)
-				fi.Delete();
+		protected override T Load<T>() {
+			if (TryLoad<T>(out var loaded))
+				return loaded;
+			return base.Load<T>();
 		}
 
-		protected override T Load<T>()
-			=> TryLoad<T>(out var value) ? value : base.Load<T>();
+		protected override void ConfigurationChanged<TConfiguration>(object sender, PropertyChangedEventArgs e) {
+			var path = GetPath<TConfiguration>();
+			var type = GetSimpleType<TConfiguration>();
+			var cfg = GetCopy<TConfiguration>();
+
+			if (IsUseIOThread) {
+				_cfgsToSave.AddOrUpdate(path, (type, cfg), (key, old) => (type, cfg));
+				_toSave.Add(path);
+			} else {
+				SaveToFile(path, type, cfg);
+			}
+		}
 
 		private void RepeatedWrite(CancellationToken token) {
 			while (!token.IsCancellationRequested
@@ -78,10 +98,19 @@ namespace ArtZilla.Config.Configurators {
 			}
 		}
 
+		private void Remove<T>() where T : IConfiguration {
+			var fi = new FileInfo(GetPath<T>());
+			if (fi.Exists)
+				fi.Delete();
+		}
+
 		private bool TryLoad<T>(out T value) where T : IConfiguration {
 			try {
 				using (var stream = new FileStream(GetPath<T>(), FileMode.Open)) {
 					value = (T)Serializer.Deserialize(stream, GetSimpleType<T>());
+					var cfg = (T)Activator.CreateInstance(TmpCfgClass<T>.RealtimeType);
+					cfg.Copy(value);
+					Subscribe(cfg);
 					return true;
 				}
 			} catch {
@@ -135,7 +164,7 @@ namespace ArtZilla.Config.Configurators {
 		private bool IsUserOnlyConfiguration(Type type) => true;
 
 		private bool _isSaving;
-		private bool _isUseIOThread = DefaultIsUseIoThread;
+		private bool _isUseIOThread;
 		private readonly BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<string, (Type Type, IConfiguration Value)> _cfgsToSave = new ConcurrentDictionary<string, (Type Type, IConfiguration Value)>();
 		private readonly BlockingCollection<string> _toSave = new BlockingCollection<string>();

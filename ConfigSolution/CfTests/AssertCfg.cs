@@ -17,7 +17,6 @@ namespace CfTests {
 		public static void IsNotDefault(ITestConfiguration cfg, string message = "Configuration is not in default state")
 			=> Assert.IsFalse(AreEqualAllProperties(cfg, new TestConfiguration()), message);
 
-
 		public static void IsNotDefault(IComplexConfig cfg, string message = "Configuration is not in default state")
 			=> Assert.IsFalse(AreEqualAllProperties(cfg, new ComplexConfig()), message);
 

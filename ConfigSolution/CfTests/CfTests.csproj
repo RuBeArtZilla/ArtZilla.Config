@@ -51,6 +51,13 @@
   <ItemGroup>
     <Compile Include="AssertCfg.cs" />
     <Compile Include="BaseTests.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="ConfiguratorTestClass.cs" />
+    <Compile Include="FileCtrTestClass.cs" />
+    <Compile Include="MemoryCtrTestClass.cs" />
+    <Compile Include="NotifyingTestCfg.cs" />
+    <Compile Include="ReadonlyTestCfg.cs" />
+    <Compile Include="RealtimeTestCfg.cs" />
     <Compile Include="TestConfigurations\IComplexConfig.cs" />
     <Compile Include="TestConfigurations\ITestConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

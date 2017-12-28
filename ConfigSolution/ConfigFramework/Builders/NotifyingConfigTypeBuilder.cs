@@ -10,8 +10,8 @@ namespace ArtZilla.Config.Builders {
 			=> source?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
 	}
 
-	public class AutoConfigTypeBuilder<T>: CopyConfigTypeBuilder<T> where T : IConfiguration {
-		protected override String ClassPrefix => "Auto";
+	public class NotifyingConfigTypeBuilder<T>: CopyConfigTypeBuilder<T> where T : IConfiguration {
+		protected override String ClassPrefix => "Notifying";
 
 		protected override void AddInterfaces() {
 			AddInpcImplementation();
@@ -22,7 +22,7 @@ namespace ArtZilla.Config.Builders {
 			// todo: refactor this method?
 
 			Tb.AddInterfaceImplementation(typeof(INotifyPropertyChanged));
-			Tb.AddInterfaceImplementation(typeof(IAutoConfiguration));
+			Tb.AddInterfaceImplementation(typeof(INotifyingConfiguration));
 
 			var field = Tb.DefineField(
 				"PropertyChanged",
@@ -33,7 +33,7 @@ namespace ArtZilla.Config.Builders {
 				"PropertyChanged",
 				EventAttributes.None,
 				typeof(PropertyChangedEventHandler));
-			
+
 			{
 				var ibaseMethod = typeof(INotifyPropertyChanged).GetMethod("add_PropertyChanged");
 				var addMethod = Tb.DefineMethod("add_PropertyChanged",
@@ -97,6 +97,18 @@ namespace ArtZilla.Config.Builders {
 		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
+
+			Label endOfMethod = il.DefineLabel();
+
+			// comparing property old and new value.
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldfld, fb);
+			il.Emit(OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ceq);
+
+			il.Emit(OpCodes.Brtrue_S, endOfMethod);
+
+			// some code if they are not equal
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Stfld, fb);
@@ -104,6 +116,9 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldstr, pi.Name);
 			il.Emit(OpCodes.Call, _onPropertyChangedMethod);
+
+			// this marks the return point
+			il.MarkLabel(endOfMethod);
 			il.Emit(OpCodes.Ret);
 		}
 

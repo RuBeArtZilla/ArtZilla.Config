@@ -1,3 +1,3 @@
 ﻿namespace ArtZilla.Config {
-	public interface IRealtimeConfiguration: IConfiguration, IAutoConfiguration {	}
+	public interface IRealtimeConfiguration: IConfiguration, INotifyingConfiguration {	}
 }

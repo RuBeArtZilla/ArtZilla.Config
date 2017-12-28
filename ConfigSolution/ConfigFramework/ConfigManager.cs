@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Reflection;
+using ArtZilla.Config.Configurators;
 
 namespace ArtZilla.Config {
 	public static class ConfigManager {
+		// TODO: reconfigure default configurator?
 		public static string CompanyName { get; set; }
 
+		// TODO: reconfigure default configurator?
 		public static string AppName { get; set; } = "Noname";
 
 		static ConfigManager() {
@@ -33,17 +36,18 @@ namespace ArtZilla.Config {
 		static ConstructorInfo GetDefaultConfiguratorCtor()
 			=> _ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes));
 
-		public static TConfiguration GetAuto<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetRealtime<TConfiguration>();
-
-		public static TConfiguration GetAutoCopy<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetAutoCopy<TConfiguration>();
 
 		public static TConfiguration GetCopy<TConfiguration>() where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().GetCopy<TConfiguration>();
 
-		public static TConfiguration GetReadOnly<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetReadOnly<TConfiguration>();
+		public static TConfiguration GetNotifying<TConfiguration>() where TConfiguration : IConfiguration
+			=> GetDefaultConfigurator().GetNotifying<TConfiguration>();
+
+		public static TConfiguration GetReadonly<TConfiguration>() where TConfiguration : IConfiguration
+			=> GetDefaultConfigurator().GetReadonly<TConfiguration>();
+
+		public static TConfiguration GetRealtime<TConfiguration>() where TConfiguration : IConfiguration
+			=> GetDefaultConfigurator().GetRealtime<TConfiguration>();
 
 		private static IConfigurator _instance;
 		private static ConstructorInfo _ctor;

@@ -12,10 +12,22 @@ namespace ArtZilla.Config {
 			| TypeAttributes.Sealed
 			| TypeAttributes.Public;
 
-		internal static readonly Type CopyType = new CopyConfigTypeBuilder<T>().Create();
-		internal static readonly Type AutoType = new AutoConfigTypeBuilder<T>().Create();
-		internal static readonly Type AutoCopyType = new AutoCopyConfigTypeBuilder<T>().Create();
-		internal static readonly Type ReadOnlyType = new ReadOnlyConfigTypeBuilder<T>().Create();
+		internal static Type CopyType
+			=> _copyType ?? (_copyType = new CopyConfigTypeBuilder<T>().Create());
+
+		internal static Type NotifyingType
+			=> _notifyingType ?? (_notifyingType = new NotifyingConfigTypeBuilder<T>().Create());
+
+		internal static Type ReadonlyType
+			=> _readonlyType ?? (_readonlyType =  new ReadonlyConfigTypeBuilder<T>().Create());
+
+		internal static Type RealtimeType
+			=> _realtimeType ?? (_realtimeType = new RealtimeConfigTypeBuilder<T>().Create());
+
+		private static Type _copyType;
+		private static Type _notifyingType;
+		private static Type _readonlyType;
+		private static Type _realtimeType;
 
 		static TmpCfgClass() {
 			if (!typeof(T).IsInterface)
@@ -147,7 +159,7 @@ namespace ArtZilla.Config {
 				var il = mb.GetILGenerator();
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldstr, "Can't modify a property " + pi.Name + " in a read-only implementation of " + typeof(T).Name + ".");
-				il.Emit(OpCodes.Newobj, typeof(ReadOnlyException).GetConstructor(new Type[] { typeof(String) }));
+				il.Emit(OpCodes.Newobj, typeof(ReadonlyException).GetConstructor(new Type[] { typeof(String) }));
 				il.Emit(OpCodes.Throw);
 
 				il.Emit(OpCodes.Ret);

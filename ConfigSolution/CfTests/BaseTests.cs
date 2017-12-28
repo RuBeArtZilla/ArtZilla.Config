@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using ArtZilla.Config;
-using ArtZilla.Config.Configurators;
-using ArtZilla.Config.Tests.TestConfigurations;
+﻿using ArtZilla.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
@@ -41,28 +36,8 @@ namespace CfTests {
 		[TestMethod]
 		public void ReadOnlyConfigurationTest() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
-			var cfg = cfr.GetReadOnly<ITestConfiguration>();
-			Assert.ThrowsException<ReadOnlyException>(() => cfg.Int32 = 1);
-		}
-
-		[TestMethod]
-		public void AutoConfigurationCreationTest() {
-			var cfg = ConfigManager.GetAuto<ITestConfiguration>();
-
-			Assert.IsNotNull(cfg);
-			Assert.IsInstanceOfType(cfg, typeof(ITestConfiguration));
-			Assert.IsInstanceOfType(cfg, typeof(IAutoConfiguration));
-		}
-
-		[TestMethod]
-		public void AutoConfigurationEventTest() {
-			var cfg = ConfigManager.GetAuto<ITestConfiguration>();
-			var auto = (IAutoConfiguration) cfg;
-			var changed = false;
-			void Inpc_PropertyChanged(object sender, PropertyChangedEventArgs e) => changed = true;
-			auto.PropertyChanged += Inpc_PropertyChanged;
-			cfg.Int32 = 172;
-			Assert.IsTrue(changed, nameof(INotifyPropertyChanged.PropertyChanged) + " not invoked");
+			var cfg = cfr.GetReadonly<ITestConfiguration>();
+			Assert.ThrowsException<ReadonlyException>(() => cfg.Int32 = 1);
 		}
 
 		[TestMethod]
@@ -71,10 +46,9 @@ namespace CfTests {
 			cfr.Reset<ITestConfiguration>();
 
 			CheckIsDefault(cfr.GetCopy<ITestConfiguration>());
-			CheckIsDefault(cfr.GetAuto<ITestConfiguration>());
+			CheckIsDefault(cfr.GetNotifying<ITestConfiguration>());
 			CheckIsDefault(cfr.GetRealtime<ITestConfiguration>());
-			CheckIsDefault(cfr.GetAutoCopy<ITestConfiguration>());
-			CheckIsDefault(cfr.GetReadOnly<ITestConfiguration>());
+			CheckIsDefault(cfr.GetReadonly<ITestConfiguration>());
 		}
 
 		[TestMethod]
@@ -99,7 +73,6 @@ namespace CfTests {
 		}
 
 		public static void CheckNotEquals(ITestConfiguration x, ITestConfiguration y) {
-
 			foreach (var p in typeof(ITestConfiguration).GetProperties())
 				Assert.AreEqual(p.GetValue(y), p.GetValue(x), "Property " + p.Name);
 		}
@@ -114,203 +87,6 @@ namespace CfTests {
 			Assert.AreEqual(NewInteger, cfg.Int32);
 			Assert.AreEqual(NewDouble, cfg.Double);
 			Assert.AreEqual(NewString, cfg.String);
-		}
-	}
-
-	[TestClass]
-	public class ReadOnlyTestCfg {
-		[TestMethod]
-		public void TestIsImplementReadOnly() {
-			var cfg = CreateTestConfiguration();
-
-			Assert.IsInstanceOfType(cfg, typeof(ITestConfiguration));
-			Assert.IsInstanceOfType(cfg, typeof(IReadOnlyConfiguration));
-		}
-
-		[TestMethod]
-		public void TestIsReadOnly() {
-			var cfg = CreateTestConfiguration();
-
-			Assert.ThrowsException<ReadOnlyException>(() => cfg.Int32 = 1);
-			Assert.ThrowsException<ReadOnlyException>(() => cfg.Int64 = cfg.Int64);
-		}
-
-		[TestMethod]
-		public void TestDefaultValues()
-			=> AssertCfg.IsDefault(CreateTestConfiguration());
-
-		private static ITestConfiguration CreateTestConfiguration()
-			=> new MemoryConfigurator().GetReadOnly<ITestConfiguration>();
-	}
-
-	[TestClass]
-	public abstract class ConfiguratorTestClass<T> where T : IConfigurator {
-		protected const int MagicNumber = 777;
-		protected const string MagicLine = "Boku wa tomodachi ga sukunai";
-
-		protected abstract T Create();
-
-		protected virtual IEnumerable<T> CreateAllVariants() {
-			yield return Create();
-		}
-
-		protected virtual void RunAll(Action<T> testMethod) {
-			foreach (var ctr in CreateAllVariants()) {
-				Console.WriteLine("Testing " + ctr);
-				testMethod(ctr);
-			}
-		}
-
-		[TestMethod]
-		public void SimpleResetTest() => RunAll(ResetTest);
-
-		[TestMethod]
-		public void SimpleLoadTest() => RunAll(LoadTest);
-
-		[TestMethod]
-		public void SimpleSaveTest() => RunAll(SaveTest);
-		
-		[TestMethod]
-		public void ComplexResetTest() => RunAll(ResetTest);
-
-		[TestMethod]
-		public void ComplexLoadTest() => RunAll(LoadTest);
-
-		[TestMethod]
-		public void ComplexSaveTest() => RunAll(SaveTest);
-
-		protected virtual void ResetTest(T ctr) {
-			// changing configuration
-			var cfg = ctr.GetCopy<ITestConfiguration>();
-			cfg.Int32 = MagicNumber;
-			cfg.String = MagicLine;
-			ctr.Save(cfg);
-
-			// should not be in the default state
-			AssertCfg.IsNotDefault(ctr.GetReadOnly<ITestConfiguration>());
-
-			// reseting configuration
-			ctr.Reset<ITestConfiguration>();
-
-			// checking that it in default state now
-			AssertCfg.IsDefault(ctr.GetReadOnly<ITestConfiguration>());
-		}
-
-		protected virtual void LoadTest(T ctr) {
-			var cfg = ctr.GetCopy<ITestConfiguration>();
-			cfg.Int32 = MagicNumber;
-			cfg.String = MagicLine;
-			ctr.Save(cfg);
-
-			// should not be in the default state
-			AssertCfg.IsNotDefault(ctr.GetReadOnly<ITestConfiguration>());
-
-			// should be equal
-			AssertCfg.AssertEqualProperties(cfg, ctr.GetReadOnly<ITestConfiguration>());
-		}
-
-		protected virtual void SaveTest(T ctr) {
-			ctr.Reset<ITestConfiguration>();
-			Assert.AreNotEqual(ctr.GetReadOnly<ITestConfiguration>().Int32, MagicNumber, "Change test magic number");
-			Assert.AreNotEqual(ctr.GetReadOnly<ITestConfiguration>().String, MagicLine, "Change test magic line");
-
-			var cfg = new TestConfiguration();
-			cfg.Int32 = MagicNumber;
-			cfg.String = MagicLine;
-			ctr.Save<ITestConfiguration>(cfg);
-
-			Assert.AreEqual(ctr.GetReadOnly<ITestConfiguration>().Int32, MagicNumber);
-			Assert.AreEqual(ctr.GetReadOnly<ITestConfiguration>().String, MagicLine);
-		}
-
-		protected virtual void ComplexResetTest(T ctr) {
-			// changing configuration
-			var cfg = ctr.GetCopy<IComplexConfig>();
-
-			cfg.ValueArray = ComplexConfig.MagicArray;
-			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
-			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
-
-			ctr.Save(cfg);
-
-			// should not be in the default state
-			AssertCfg.IsNotDefault(ctr.GetReadOnly<IComplexConfig>());
-
-			// reseting configuration
-			ctr.Reset<ITestConfiguration>();
-
-			// checking that it in default state now
-			AssertCfg.IsDefault(ctr.GetReadOnly<IComplexConfig>());
-		}
-
-		protected virtual void ComplexLoadTest(T ctr) {
-			var cfg = ctr.GetCopy<IComplexConfig>();
-
-			cfg.ValueArray = ComplexConfig.MagicArray;
-			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
-			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
-
-			ctr.Save(cfg);
-
-			// should not be in the default state
-			AssertCfg.IsNotDefault(ctr.GetReadOnly<IComplexConfig>());
-
-			// should be equal
-			AssertCfg.AssertEqualProperties(cfg, ctr.GetReadOnly<IComplexConfig>());
-		}
-
-		protected virtual void ComplexSaveTest(T ctr) {
-			ctr.Reset<IComplexConfig>();
-			Assert.IsFalse(AssertCfg.AreEquals(ctr.GetReadOnly<IComplexConfig>().ValueArray, ComplexConfig.MagicArray),
-				"Change test magic number");
-
-			var cfg = new ComplexConfig();
-
-			cfg.ValueArray = ComplexConfig.MagicArray;
-			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
-			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
-
-			ctr.Save<IComplexConfig>(cfg);
-
-			Assert.IsTrue(AssertCfg.AreEquals(ctr.GetReadOnly<IComplexConfig>().ValueArray, ComplexConfig.MagicArray));
-		}
-	}
-
-	[TestClass]
-	public class MemoryCtrTestClass: ConfiguratorTestClass<MemoryConfigurator> {
-		protected override MemoryConfigurator Create() => new MemoryConfigurator();
-	}
-
-	[TestClass]
-	public class FileCtrTestClass: ConfiguratorTestClass<FileConfigurator> {
-		protected override FileConfigurator Create() => new FileConfigurator();
-
-		protected override IEnumerable<FileConfigurator> CreateAllVariants() {
-			yield return Create();
-			yield return new FileConfigurator { Company = null };
-			yield return new FileConfigurator { AppName = null };
-			yield return new FileConfigurator { Company = null, AppName = null };
-			yield return new FileConfigurator { Company = "" };
-			yield return new FileConfigurator { AppName = "" };
-			yield return new FileConfigurator { Company = "", AppName = "" };
-		}
-
-		[TestMethod]
-		public virtual void MultipleInstancesLoadTest() {
-			var saver = Create();
-			var cfg = saver.GetCopy<ITestConfiguration>();
-			cfg.Int32 = MagicNumber;
-			cfg.String = MagicLine;
-			saver.Save(cfg);
-			saver.Flush();
-
-			// should not be in the default state
-			AssertCfg.IsNotDefault(saver.GetReadOnly<ITestConfiguration>());
-
-			var loader = Create();
-
-			// should be equal
-			AssertCfg.AssertEqualProperties(saver.GetReadOnly<ITestConfiguration>(), loader.GetReadOnly<ITestConfiguration>());
 		}
 	}
 }
