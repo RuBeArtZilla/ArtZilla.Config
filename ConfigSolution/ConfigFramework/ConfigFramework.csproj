@@ -24,42 +24,42 @@
 		<Description>Configuration Framework</Description>
 		<Summary>Configuration Framework</Summary>
 
-		<PackageCopyright>Copyright (c) 2017 Artyom Fomin</PackageCopyright>
+		<PackageCopyright>Copyright (c) 2017-2018 Artyom Fomin</PackageCopyright>
 		<PackageTags>ArtZilla, .Net, Configuration Framework</PackageTags>
 		<PackageReleaseNotes>Refactoring.</PackageReleaseNotes>
 		<PackageIconUrl>https://files.artzilla.name/ArtZilla.Config/Icon.png</PackageIconUrl>
 		<PackageProjectUrl>https://files.artzilla.name/ArtZilla.Config</PackageProjectUrl>
 		<PackageLicenseUrl>https://files.artzilla.name/ArtZilla.Config/License.txt</PackageLicenseUrl>
 
-		<Copyright>Copyright (c) 2017 Artyom Fomin</Copyright>
+		<Copyright>Copyright (c) 2017-2018 Artyom Fomin</Copyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.0.13</Version>
-		<FileVersion>0.1.0.13</FileVersion>
-		<AssemblyVersion>0.1.0.13</AssemblyVersion>
+		<Version>0.1.1.7</Version>
+		<FileVersion>0.1.1.7</FileVersion>
+		<AssemblyVersion>0.1.1.7</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>DEBUG</DefineConstants>
+		<DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
 		<IncludeSymbols>true</IncludeSymbols>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<DefineConstants>RELEASE</DefineConstants>
+		<DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
 		<IncludeSymbols>true</IncludeSymbols>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
-		<DefineConstants>NET40;NETFULL</DefineConstants>
+		<DefineConstants>$(DefineConstants);NET40;NETFULL</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
-		<DefineConstants>NET45;NETFULL</DefineConstants>
+		<DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-		<DefineConstants>NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+		<DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_0</DefineConstants>
 	</PropertyGroup>
 
 	<!-- Common NuGet Packages -->

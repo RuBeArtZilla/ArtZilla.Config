@@ -1,4 +1,5 @@
 ﻿using ArtZilla.Config;
+using ArtZilla.Config.Tests.TestConfigurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
@@ -11,7 +12,7 @@ namespace CfTests {
 		[TestMethod]
 		public void FirstTestMethod() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
-			var cfg = cfr.GetCopy<ITestConfiguration>();
+			var cfg = cfr.Copy<ITestConfiguration>();
 			CheckIsDefault(cfg);
 			ChangeConfig(cfg);
 			cfr.Save(cfg);
@@ -27,7 +28,7 @@ namespace CfTests {
 		public void CreateConfigurationTest() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
 			cfr.Reset<ITestConfiguration>();
-			var cfg = cfr.GetCopy<ITestConfiguration>();
+			var cfg = cfr.Copy<ITestConfiguration>();
 			CheckIsDefault(cfg);
 			ChangeConfig(cfg);
 			CheckIsChanged(cfg);
@@ -36,7 +37,7 @@ namespace CfTests {
 		[TestMethod]
 		public void ReadOnlyConfigurationTest() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
-			var cfg = cfr.GetReadonly<ITestConfiguration>();
+			var cfg = cfr.Readonly<ITestConfiguration>();
 			Assert.ThrowsException<ReadonlyException>(() => cfg.Int32 = 1);
 		}
 
@@ -45,16 +46,24 @@ namespace CfTests {
 			var cfr = ConfigManager.GetDefaultConfigurator();
 			cfr.Reset<ITestConfiguration>();
 
-			CheckIsDefault(cfr.GetCopy<ITestConfiguration>());
-			CheckIsDefault(cfr.GetNotifying<ITestConfiguration>());
-			CheckIsDefault(cfr.GetRealtime<ITestConfiguration>());
-			CheckIsDefault(cfr.GetReadonly<ITestConfiguration>());
+			CheckIsDefault(cfr.Copy<ITestConfiguration>());
+			CheckIsDefault(cfr.Notifying<ITestConfiguration>());
+			CheckIsDefault(cfr.Realtime<ITestConfiguration>());
+			CheckIsDefault(cfr.Readonly<ITestConfiguration>());
+		}
+
+		[TestMethod]
+		public void TestKeyConfig() {
+			var cfr = ConfigManager.GetDefaultConfigurator();
+			
+
+
 		}
 
 		[TestMethod]
 		public void TestCopyMethod() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
-			var src = cfr.GetCopy<ITestConfiguration>();
+			var src = cfr.Copy<ITestConfiguration>();
 			var dst = new TestConfiguration();
 			ChangeConfig(src);
 			if (AssertCfg.AreEqualAllProperties(dst, src))

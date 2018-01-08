@@ -26,6 +26,6 @@ namespace CfTests {
 			=> AssertCfg.IsDefault(CreateTestConfiguration());
 
 		private static ITestConfiguration CreateTestConfiguration()
-			=> new MemoryConfigurator().GetReadonly<ITestConfiguration>();
+			=> new MemoryConfigurator().Readonly<ITestConfiguration>();
 	}
 }

@@ -5,34 +5,33 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CfTests {
 	[TestClass]
 	public class FileCtrTestClass: ConfiguratorTestClass<FileConfigurator> {
-		protected override FileConfigurator Create() => new FileConfigurator();
+		protected override FileConfigurator Create() => new FileConfigurator(nameof(FileCtrTestClass));
 
 		protected override IEnumerable<FileConfigurator> CreateAllVariants() {
 			yield return Create();
-			yield return new FileConfigurator { Company = null };
-			yield return new FileConfigurator { AppName = null };
-			yield return new FileConfigurator { Company = null, AppName = null };
-			yield return new FileConfigurator { Company = "" };
-			yield return new FileConfigurator { AppName = "" };
-			yield return new FileConfigurator { Company = "", AppName = "" };
+			yield return new FileConfigurator(appName: null);
+			yield return new FileConfigurator(appName: null, companyName: null);
+			yield return new FileConfigurator(appName: "");
+			yield return new FileConfigurator(appName: "", companyName: "");
 		}
 
 		[TestMethod]
 		public virtual void MultipleInstancesLoadTest() {
 			var saver = Create();
-			var cfg = saver.GetCopy<ITestConfiguration>();
+			saver.Reset<ITestConfiguration>();
+			var cfg = saver.Copy<ITestConfiguration>();
 			cfg.Int32 = MagicNumber;
 			cfg.String = MagicLine;
 			saver.Save(cfg);
 			saver.Flush();
 
 			// should not be in the default state
-			AssertCfg.IsNotDefault(saver.GetReadonly<ITestConfiguration>());
+			AssertCfg.IsNotDefault(saver.Readonly<ITestConfiguration>());
 
 			var loader = Create();
 
 			// should be equal
-			AssertCfg.AssertEqualProperties(saver.GetReadonly<ITestConfiguration>(), loader.GetReadonly<ITestConfiguration>());
+			AssertCfg.AssertEqualProperties(saver.Readonly<ITestConfiguration>(), loader.Readonly<ITestConfiguration>());
 		}
 	}
 }

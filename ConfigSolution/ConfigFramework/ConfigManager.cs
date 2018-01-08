@@ -38,16 +38,16 @@ namespace ArtZilla.Config {
 
 
 		public static TConfiguration GetCopy<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetCopy<TConfiguration>();
+			=> GetDefaultConfigurator().Copy<TConfiguration>();
 
 		public static TConfiguration GetNotifying<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetNotifying<TConfiguration>();
+			=> GetDefaultConfigurator().Notifying<TConfiguration>();
 
 		public static TConfiguration GetReadonly<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetReadonly<TConfiguration>();
+			=> GetDefaultConfigurator().Readonly<TConfiguration>();
 
 		public static TConfiguration GetRealtime<TConfiguration>() where TConfiguration : IConfiguration
-			=> GetDefaultConfigurator().GetRealtime<TConfiguration>();
+			=> GetDefaultConfigurator().Realtime<TConfiguration>();
 
 		private static IConfigurator _instance;
 		private static ConstructorInfo _ctor;

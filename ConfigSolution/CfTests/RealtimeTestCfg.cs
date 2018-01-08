@@ -20,13 +20,13 @@ namespace CfTests {
 			var ctr = new MemoryConfigurator();
 			ctr.Reset<ITestConfiguration>();
 
-			var cfg = ctr.GetRealtime<ITestConfiguration>();
+			var cfg = ctr.Realtime<ITestConfiguration>();
 			AssertCfg.IsDefault(cfg);
 
 			const string message = "Testing realtime";
 			cfg.String = message;
 
-			var other = ctr.GetReadonly<ITestConfiguration>();
+			var other = ctr.Readonly<ITestConfiguration>();
 			AssertCfg.IsNotDefault(cfg);
 			AssertCfg.IsNotDefault(other);
 			Assert.AreEqual(cfg.String, message, "realtime config not changed");
@@ -37,18 +37,18 @@ namespace CfTests {
 		public void RealtimeFileConfigurationEditTest() {
 			var appName = Guid.NewGuid().ToString();
 			var company = nameof(ArtZilla.Config);
-			var ctr1 = new FileConfigurator() { AppName = appName , Company = company };
+			var ctr1 = new FileConfigurator(appName, company);
 			ctr1.Reset<ITestConfiguration>();
 
-			var cfg = ctr1.GetRealtime<ITestConfiguration>();
+			var cfg = ctr1.Realtime<ITestConfiguration>();
 			AssertCfg.IsDefault(cfg);
 
 			const string message = "Testing realtime";
 			cfg.String = message;
 			ctr1.Flush();
 
-			var ctr2 = new FileConfigurator() { AppName = appName, Company = company };
-			var other = ctr2.GetReadonly<ITestConfiguration>();
+			var ctr2 = new FileConfigurator(appName, company);
+			var other = ctr2.Readonly<ITestConfiguration>();
 			Assert.AreEqual(message, cfg.String, "realtime config not changed");
 			Assert.AreEqual(message, other.String, "readonly config not actual");
 
