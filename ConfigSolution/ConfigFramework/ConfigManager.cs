@@ -36,17 +36,28 @@ namespace ArtZilla.Config {
 		static ConstructorInfo GetDefaultConfiguratorCtor()
 			=> _ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes));
 
+		public static IConfigurator<TConfiguration> As<TConfiguration>()
+			where TConfiguration : IConfiguration
+			=> GetDefaultConfigurator().As<TConfiguration>();
 
-		public static TConfiguration GetCopy<TConfiguration>() where TConfiguration : IConfiguration
+		public static IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>()
+			where TConfiguration : IConfiguration
+			=> GetDefaultConfigurator().As<TKey, TConfiguration>();
+
+		public static TConfiguration GetCopy<TConfiguration>()
+			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Copy<TConfiguration>();
 
-		public static TConfiguration GetNotifying<TConfiguration>() where TConfiguration : IConfiguration
+		public static TConfiguration GetNotifying<TConfiguration>()
+			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Notifying<TConfiguration>();
 
-		public static TConfiguration GetReadonly<TConfiguration>() where TConfiguration : IConfiguration
+		public static TConfiguration GetReadonly<TConfiguration>()
+			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Readonly<TConfiguration>();
 
-		public static TConfiguration GetRealtime<TConfiguration>() where TConfiguration : IConfiguration
+		public static TConfiguration GetRealtime<TConfiguration>()
+			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Realtime<TConfiguration>();
 
 		private static IConfigurator _instance;
