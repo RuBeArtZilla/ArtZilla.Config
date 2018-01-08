@@ -42,40 +42,47 @@ namespace CfTests {
 		public void ComplexSaveTest() => RunAll(SaveTest);
 
 		[TestMethod]
-		public void TypedExistTest() => RunAll(TypedExistTest);
+		public void TypedTest() => RunAll(TypedExistTest);
 
 		[TestMethod]
-		public void KeysExistTest() => RunAll(KeysExistTest);
+		public void KeysTest() => RunAll(KeysExistTest);
 
 		protected virtual void KeysExistTest(T ctr) {
-			var cfr = ctr.As<int, INumCfg>();
+			var cfr = ctr.As<int, ITestConfiguration>();
 			cfr.Reset(0);
-			cfr.Reset(1);
+			cfr.Reset(42);
 
-			Assert.IsFalse(cfr.IsExist(0), "Configuration exist after reset");
+			// Assert.IsTrue(cfr.IsExist(0), "Configuration should exist after reset");
+			// Assert.IsTrue(cfr.IsExist(1), "Configuration should exist after reset");
+
+			AssertCfg.IsDefault(cfr.Readonly(0));
+			AssertCfg.IsDefault(cfr.Readonly(42));
 		}
 
 		protected virtual void TypedExistTest(T ctr) {
-			var cfr = ctr.As<INumCfg>();
+			var cfr = ctr.As<ITestConfiguration>();
 			cfr.Reset();
-			Assert.IsFalse(cfr.IsExist(), "Configuration exist after reset");
+
+			// Assert.IsTrue(cfr.IsExist(), "Configuration should exist after reset");
+
+			AssertCfg.IsDefault(cfr.Readonly());
 		}
 
 		protected virtual void ResetTest(T ctr) {
+			var x = ctr.As<ITestConfiguration>();
 			// changing configuration
-			var cfg = ctr.Copy<ITestConfiguration>();
+			var cfg = x.Realtime();
 			cfg.Int32 = MagicNumber;
 			cfg.String = MagicLine;
-			ctr.Save(cfg);
 
 			// should not be in the default state
-			AssertCfg.IsNotDefault(ctr.Readonly<ITestConfiguration>());
+			AssertCfg.IsNotDefault(x.Readonly());
 
 			// reseting configuration
-			ctr.Reset<ITestConfiguration>();
+			x.Reset();
 
 			// checking that it in default state now
-			AssertCfg.IsDefault(ctr.Readonly<ITestConfiguration>());
+			AssertCfg.IsDefault(x.Readonly());
 		}
 
 		protected virtual void LoadTest(T ctr) {

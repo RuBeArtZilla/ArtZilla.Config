@@ -58,25 +58,55 @@ namespace ArtZilla.Config.Configurators {
 			}
 		}
 
-		public override bool TryLoad<TKey, TConfiguration>(out TConfiguration configuration)
-			=> throw new NotImplementedException();
+		public override bool TryLoad<TKey, TConfiguration>(TKey key, out TConfiguration configuration) {
+			try {
+				var path = GetPath<TKey, TConfiguration>(key);
+				WaitPath(path);
+				if (!File.Exists(path)) {
+					configuration = default;
+					return false;
+				}
+
+				using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+					var loaded = (TConfiguration)Serializer.Deserialize(stream, GetSimpleType<TConfiguration>());
+					configuration = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
+					configuration.Copy(loaded);
+					return true;
+				}
+			} catch (Exception e) {
+#if DEBUG
+				Console.WriteLine("Exception on " + nameof(TryLoad) + ": " + e);
+#endif
+				configuration = default;
+				return false;
+			}
+		}
 
 		public override void ToSave<TConfiguration>(TConfiguration configuration)
 			=> _toSave.Add((GetPath<TConfiguration>(), GetSimpleType<TConfiguration>(), configuration));
 
 		public override void ToSave<TKey, TConfiguration>(TKey key, TConfiguration configuration)
-			=> throw new NotImplementedException();
+			=> _toSave.Add((GetPath<TKey, TConfiguration> (key), GetSimpleType<TConfiguration>(), configuration));
 
 		public override void Reset<TConfiguration>() {
-			try {
-				Remove<TConfiguration>();
-			} catch {
-				ToSave<TConfiguration>(default);
+			// TODO: Just do it!
+			for (var i = 0; i < 5; i++) {
+				try {
+					Remove<TConfiguration>();
+					return;
+				} catch {	}
 			}
 		}
 
-		public override void Reset<TKey, TConfiguration>(TKey key)
-			=> throw new NotImplementedException();
+		public override void Reset<TKey, TConfiguration>(TKey key) {
+			// TODO: Just do it!
+			for (var i = 0; i < 5; i++) {
+				try {
+					Remove<TKey, TConfiguration>(key);
+					return;
+				} catch { }
+			}
+		}
 
 		public override void Flush() {
 			if (!AsyncWrite)
@@ -88,23 +118,38 @@ namespace ArtZilla.Config.Configurators {
 		private string GetPath<TConfiguration>() where TConfiguration : IConfiguration
 			=> _paths.GetOrAdd(typeof(TConfiguration), t => PathEx(GetDirectory<TConfiguration>(), GetFileName<TConfiguration>()));
 
+		private string GetPath<TKey, TConfiguration>(TKey key) where TConfiguration : IConfiguration
+			=> _paths2.GetOrAdd((typeof(TConfiguration), typeof(TKey), key),
+				t => PathEx(GetDirectory<TKey, TConfiguration>(), GetFileName<TKey, TConfiguration>(key)));
+
 		private string GetPath(Type type)
 			=> _paths.GetOrAdd(type, t => PathEx(GetDirectory(t), GetFileName(t)));
 
 		private string GetDirectory<T>() where T : IConfiguration
 			=> GetDirectory(typeof(T));
 
+		private string GetDirectory<TKey, TConfiguration>() where TConfiguration : IConfiguration
+			=> GetDirectory(typeof(TConfiguration), typeof(TKey));
+
 		private string GetDirectory(Type type)
 			=> PathEx(GetBaseDirectory(type), Company, AppName);
+
+		private string GetDirectory(Type type, Type keyType)
+			=> PathEx(GetBaseDirectory(type), Company, AppName, type.Name + "_by_" + keyType.Name);
 
 		private string GetBaseDirectory(Type type)
 			=> Environment.GetFolderPath(IsUserOnlyConfiguration(type)
 				? Environment.SpecialFolder.LocalApplicationData
 				: Environment.SpecialFolder.CommonApplicationData);
 
-		private string GetFileName<TConfiguration>() => typeof(TConfiguration).Name.Combine(ExtensionSeparator, Extension);
+		private string GetFileName<TConfiguration>()
+			=> typeof(TConfiguration).Name.Combine(ExtensionSeparator, Extension);
 
-		private string GetFileName(Type type) => type.Name.Combine(ExtensionSeparator, Extension);
+		private string GetFileName<TKey, TConfiguration>(TKey key)
+			=> key.ToString().Combine(ExtensionSeparator, Extension);
+
+		private string GetFileName(Type type)
+			=> type.Name.Combine(ExtensionSeparator, Extension);
 
 		private string PathEx(params string[] paths)
 			=> Path.Combine(paths.Where(path => !string.IsNullOrWhiteSpace(path)).ToArray());
@@ -150,6 +195,7 @@ namespace ArtZilla.Config.Configurators {
 			if (!_isSaving)
 				return;
 
+			// todo: use path
 			SpinWait.SpinUntil(() => !_isSaving);
 		}
 
@@ -180,6 +226,10 @@ namespace ArtZilla.Config.Configurators {
 			where TConfiguration : IConfiguration
 			=> Remove(GetPath<TConfiguration>());
 
+		private void Remove<TKey, TConfiguration>(TKey key)
+			where TConfiguration : IConfiguration
+			=> Remove(GetPath<TKey, TConfiguration>(key));
+
 		private void Remove(string path) {
 			WaitPath(path);
 			var fi = new FileInfo(path);
@@ -191,6 +241,8 @@ namespace ArtZilla.Config.Configurators {
 		private readonly BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<Type, string> _paths
 			= new ConcurrentDictionary<Type, string>();
+		private readonly ConcurrentDictionary<(Type Config, Type KeyType, object KeyValue), string> _paths2
+			= new ConcurrentDictionary<(Type Config, Type KeyType, object KeyValue), string>();
 		private readonly BlockingCollection<(string Path, Type Type, IConfiguration Value)> _toSave
 			= new BlockingCollection<(string Path, Type Type, IConfiguration Value)>();
 	}

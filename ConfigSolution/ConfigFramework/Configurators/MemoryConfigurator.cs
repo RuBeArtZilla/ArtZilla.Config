@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ArtZilla.Config.Configurators {
 	public class MemoryConfigurator: IConfigurator {
@@ -72,7 +73,7 @@ namespace ArtZilla.Config.Configurators {
 
 		public IConfigurator<TConfiguration> As<TConfiguration>()
 			where TConfiguration : IConfiguration
-			=> (IConfigurator<TConfiguration>) _dict.GetOrAdd(typeof(TConfiguration), CreateTypedConfigurator<TConfiguration>());
+			=> (IConfigurator<TConfiguration>)_dict.GetOrAdd(typeof(TConfiguration), CreateTypedConfigurator<TConfiguration>());
 
 		public IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>()
 			where TConfiguration : IConfiguration
@@ -81,7 +82,7 @@ namespace ArtZilla.Config.Configurators {
 		protected virtual TConfiguration Load<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> CreateDefault<TConfiguration>();
-		
+
 		protected virtual TConfiguration CreateDefault<TConfiguration>()
 			where TConfiguration : IConfiguration {
 			var cfg = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
@@ -124,7 +125,7 @@ namespace ArtZilla.Config.Configurators {
 
 		public virtual void Reset() {
 			lock (_guard) {
-				Value = default;
+				Save(CreateDefault());
 			}
 		}
 
@@ -188,58 +189,68 @@ namespace ArtZilla.Config.Configurators {
 			set => Save(key, value);
 		}
 
-		public bool IsExist(TKey key)
+		public virtual bool IsExist(TKey key)
 			=> _cache.ContainsKey(key);
 
-		public void Reset(TKey key) {
+		public virtual void Reset(TKey key) {
 			if (_cache.TryRemove(key, out var removed))
-				Unsubscribe(removed);
+				Unsubscribe(key, removed.Configuration, removed.Handler);
 		}
 
-		public void Save(TKey key, TConfiguration value)
+		public virtual void Save(TKey key, TConfiguration value)
 			=> Get(key).Copy(value);
 
-		public TConfiguration Copy(TKey key)
+		public virtual TConfiguration Copy(TKey key)
 			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get(key));
 
-		public TConfiguration Notifying(TKey key)
+		public virtual TConfiguration Notifying(TKey key)
 			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get(key));
 
-		public TConfiguration Readonly(TKey key)
+		public virtual TConfiguration Readonly(TKey key)
 			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get(key));
 
-		public TConfiguration Realtime(TKey key)
+		public virtual TConfiguration Realtime(TKey key)
 			=> Get(key);
 
 		public IEnumerator<TConfiguration> GetEnumerator()
-			=> _cache.Values.GetEnumerator();
+			=> _cache.Values.Select(i => i.Configuration).GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator()
 			=> GetEnumerator();
 
+		protected virtual TConfiguration Get(TKey key)
+			=> _cache.GetOrAdd(key, SetCacheValue(key)).Configuration;
+
+		protected virtual (TConfiguration, PropertyChangedEventHandler) SetCacheValue(TKey key) {
+			var cfg = Load(key);
+			return (cfg, Subscribe(key, cfg));
+		}
+
 		protected virtual TConfiguration Load(TKey key)
 			=> CreateDefault(key);
 
-		protected virtual TConfiguration Get(TKey key)
-			=> _cache.GetOrAdd(key, Load(key));
+		protected virtual TConfiguration CreateDefault(TKey key)
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
 
-		protected virtual TConfiguration CreateDefault(TKey key) {
-			var cfg = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
-			Subscribe(cfg);
-			return cfg;
+		protected virtual PropertyChangedEventHandler Subscribe(TKey key, TConfiguration cfg) {
+			PropertyChangedEventHandler handler = (s, e) => ConfigurationChanged(key, cfg, e.PropertyName);
+			Subscribe(key, cfg, handler);
+			return handler;
 		}
 
-		protected virtual void Subscribe(TConfiguration cfg)
-			=> ((IRealtimeConfiguration)cfg).PropertyChanged += ConfigurationChanged;
+		protected virtual void Subscribe(TKey key, TConfiguration cfg, PropertyChangedEventHandler handler) {
+			((IRealtimeConfiguration)cfg).PropertyChanged += handler;
+		}
 
-		protected virtual void Unsubscribe(TConfiguration cfg)
-			=> ((IRealtimeConfiguration)cfg).PropertyChanged -= ConfigurationChanged;
+		protected virtual void Unsubscribe(TKey key, TConfiguration cfg, PropertyChangedEventHandler handler) {
+			((IRealtimeConfiguration)cfg).PropertyChanged -= handler;
+		}
 
-		protected virtual void ConfigurationChanged(object sender, PropertyChangedEventArgs e) {
+		protected virtual void ConfigurationChanged(TKey key, TConfiguration configuration, string propertyName) {
 			//
 		}
 
-		private readonly ConcurrentDictionary<TKey, TConfiguration> _cache
-			= new ConcurrentDictionary<TKey, TConfiguration>();
+		private readonly ConcurrentDictionary<TKey, (TConfiguration Configuration, PropertyChangedEventHandler Handler)> _cache
+			= new ConcurrentDictionary<TKey, (TConfiguration Configuration, PropertyChangedEventHandler Handler)>();
 	}
 }

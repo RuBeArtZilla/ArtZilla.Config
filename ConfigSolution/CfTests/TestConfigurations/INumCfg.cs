@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ArtZilla.Config.Tests.TestConfigurations {
-	interface INumCfg : IConfiguration {
+	public interface INumCfg : IConfiguration {
 		[DefaultValue(42)]
 		int Value { get; set; }
 	}
