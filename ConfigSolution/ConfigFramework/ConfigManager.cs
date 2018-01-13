@@ -10,6 +10,11 @@ namespace ArtZilla.Config {
 		// TODO: reconfigure default configurator?
 		public static string AppName { get; set; } = "Noname";
 
+		public static IConfigurator DefaultConfigurator {
+			get => GetDefaultConfigurator();
+			// set => SetDefaultConfigurator(value); // todo: implement set method.
+		}
+
 		static ConfigManager() {
 			AppName = Assembly.GetExecutingAssembly().GetName().Name;
 		}
@@ -19,19 +24,20 @@ namespace ArtZilla.Config {
 			SetDefaultConfigurator<TConfigurator>();
 		}
 
-		public static void SetDefaultConfigurator<TConfigurator>() where TConfigurator : class, IConfigurator, new() {
-			_configurator = typeof(TConfigurator);
-			_ctor = null;
-		}
+		public static void SetDefaultConfigurator<TConfigurator>() where TConfigurator : class, IConfigurator, new() 
+			=> SetDefaultConfigurator(typeof(TConfigurator));
 
 		public static void SetDefaultConfigurator(Type tconfigurator) {
+			if (tconfigurator.IsAbstract)
+				throw new Exception("Default configurator type can't be abstract");
+
 			// ToDo: Assert.IsImplement(IConfigurator);
 			_configurator = tconfigurator;
 			_ctor = null;
 		}
 
 		public static IConfigurator GetDefaultConfigurator()
-			=> _instance ?? (_instance = (IConfigurator)GetDefaultConfiguratorCtor().Invoke(null));
+			=> _instance ?? (_instance = (IConfigurator) GetDefaultConfiguratorCtor().Invoke(null));
 
 		static ConstructorInfo GetDefaultConfiguratorCtor()
 			=> _ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes));
@@ -44,19 +50,19 @@ namespace ArtZilla.Config {
 			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().As<TKey, TConfiguration>();
 
-		public static TConfiguration GetCopy<TConfiguration>()
+		public static TConfiguration Copy<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Copy<TConfiguration>();
 
-		public static TConfiguration GetNotifying<TConfiguration>()
+		public static TConfiguration Notifying<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Notifying<TConfiguration>();
 
-		public static TConfiguration GetReadonly<TConfiguration>()
+		public static TConfiguration Readonly<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Readonly<TConfiguration>();
 
-		public static TConfiguration GetRealtime<TConfiguration>()
+		public static TConfiguration Realtime<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> GetDefaultConfigurator().Realtime<TConfiguration>();
 

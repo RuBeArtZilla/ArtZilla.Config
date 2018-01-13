@@ -8,7 +8,7 @@ namespace CfTests {
 	public class RealtimeTestCfg {
 		[TestMethod]
 		public void RealtimeConfigurationCreationTest() {
-			var cfg = ConfigManager.GetRealtime<ITestConfiguration>();
+			var cfg = ConfigManager.Realtime<ITestConfiguration>();
 
 			Assert.IsNotNull(cfg);
 			Assert.IsInstanceOfType(cfg, typeof(ITestConfiguration));

@@ -7,7 +7,7 @@ namespace CfTests {
 	public class NotifyingTestCfg {
 		[TestMethod]
 		public void NotifyingConfigurationCreationTest() {
-			var cfg = ConfigManager.GetNotifying<ITestConfiguration>();
+			var cfg = ConfigManager.Notifying<ITestConfiguration>();
 
 			Assert.IsNotNull(cfg);
 			Assert.IsInstanceOfType(cfg, typeof(ITestConfiguration));
@@ -16,7 +16,7 @@ namespace CfTests {
 
 		[TestMethod]
 		public void NotifyingConfigurationEventTest() {
-			var cfg = ConfigManager.GetNotifying<ITestConfiguration>();
+			var cfg = ConfigManager.Notifying<ITestConfiguration>();
 			var auto = (INotifyingConfiguration)cfg;
 			var changed = false;
 			void Inpc_PropertyChanged(object sender, PropertyChangedEventArgs e) => changed = true;

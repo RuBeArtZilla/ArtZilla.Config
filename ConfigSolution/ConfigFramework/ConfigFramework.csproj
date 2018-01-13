@@ -27,16 +27,16 @@
 		<PackageCopyright>Copyright (c) 2017-2018 Artyom Fomin</PackageCopyright>
 		<PackageTags>ArtZilla, .Net, Configuration Framework</PackageTags>
 		<PackageReleaseNotes>Refactoring.</PackageReleaseNotes>
-		<PackageIconUrl>https://files.artzilla.name/ArtZilla.Config/Icon.png</PackageIconUrl>
-		<PackageProjectUrl>https://files.artzilla.name/ArtZilla.Config</PackageProjectUrl>
-		<PackageLicenseUrl>https://files.artzilla.name/ArtZilla.Config/License.txt</PackageLicenseUrl>
+		<PackageIconUrl>https://artzilla.name/ArtZilla.Config/Icon.png</PackageIconUrl>
+		<PackageProjectUrl>https://artzilla.name/ArtZilla.Config/</PackageProjectUrl>
+		<PackageLicenseUrl>https://artzilla.name/ArtZilla.Config/License.txt</PackageLicenseUrl>
 
 		<Copyright>Copyright (c) 2017-2018 Artyom Fomin</Copyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.2.5</Version>
-		<FileVersion>0.1.2.5</FileVersion>
-		<AssemblyVersion>0.1.2.5</AssemblyVersion>
+		<Version>0.1.2.8</Version>
+		<FileVersion>0.1.2.8</FileVersion>
+		<AssemblyVersion>0.1.2.8</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 	</PropertyGroup>
 
@@ -64,7 +64,7 @@
 
 	<!-- Common NuGet Packages -->
 	<ItemGroup>
-		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.13" />
+		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.15" />
 		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
 	</ItemGroup>
 
