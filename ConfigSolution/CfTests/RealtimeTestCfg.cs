@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using ArtZilla.Config;
 using ArtZilla.Config.Configurators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -54,6 +57,32 @@ namespace CfTests {
 
 			ctr1.Reset<ITestConfiguration>();
 			ctr2.Reset<ITestConfiguration>();
+		}
+
+		[TestMethod]
+		public void ResetCallbackTest() {
+			var changes = new List<string>();
+			void PropertyChangedMethod(object sender, PropertyChangedEventArgs e) => changes.Add(e.PropertyName);
+
+			var randomCtr = CreateRandom();
+			var ctr = randomCtr.As<ITestConfiguration>();
+			ctr.Reset();
+
+			var cfg = ctr.Realtime();
+			cfg.Int32 = 1234;
+
+			((IRealtimeConfiguration)cfg).PropertyChanged += PropertyChangedMethod;
+			Assert.IsTrue(changes.Count == 0);
+
+			ctr.Reset();
+			Assert.IsTrue(changes.Count == 1);
+			Assert.IsTrue(changes.Contains(nameof(ITestConfiguration.Int32)));
+		}
+
+		private FileConfigurator CreateRandom() {
+			var appName = Guid.NewGuid().ToString();
+			var company = nameof(ArtZilla.Config);
+			return new FileConfigurator(appName, company);
 		}
 	}
 }

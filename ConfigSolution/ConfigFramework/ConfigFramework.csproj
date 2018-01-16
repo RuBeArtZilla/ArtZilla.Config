@@ -34,9 +34,9 @@
 		<Copyright>Copyright (c) 2017-2018 Artyom Fomin</Copyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.2.8</Version>
-		<FileVersion>0.1.2.8</FileVersion>
-		<AssemblyVersion>0.1.2.8</AssemblyVersion>
+		<Version>0.1.2.9</Version>
+		<FileVersion>0.1.2.9</FileVersion>
+		<AssemblyVersion>0.1.2.9</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 	</PropertyGroup>
 
@@ -65,12 +65,11 @@
 	<!-- Common NuGet Packages -->
 	<ItemGroup>
 		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.15" />
-		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+		<PackageReference Include="System.ValueTuple" />
 	</ItemGroup>
 
 	<!-- NET Framework 4.0 NuGet Packages -->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net40'">
-		
 	</ItemGroup>
 	
 	<!-- NET Framework 4.5 NuGet Packages -->
