@@ -65,7 +65,7 @@
 	<!-- Common NuGet Packages -->
 	<ItemGroup>
 		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.15" />
-		<PackageReference Include="System.ValueTuple" />
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
 	</ItemGroup>
 
 	<!-- NET Framework 4.0 NuGet Packages -->
