@@ -18,7 +18,7 @@
 
 		<PackageId>ArtZilla.Config</PackageId>
 		<AssemblyName>ArtZilla.Config</AssemblyName>
-		<RootNamespace>ArtZilla.Config</RootNamespace>
+		<RootNamespace>ArtZilla</RootNamespace>
 
 		<AssemblyTitle>Configuration Framework</AssemblyTitle>
 		<Description>Configuration Framework</Description>
