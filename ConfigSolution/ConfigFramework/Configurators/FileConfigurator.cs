@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using ArtZilla.Net.Core;
-
-namespace ArtZilla.Config.Configurators {
+﻿namespace ArtZilla.Config.Configurators {
 	public sealed class FileConfigurator: LazyConfigurator {
 		public FileConfigurator() : this(new FileThread()) { }
 		public FileConfigurator(string appName) : this(new FileThread(appName)) { }
