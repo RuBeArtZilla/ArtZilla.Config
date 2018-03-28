@@ -237,7 +237,7 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		private bool _isSaving;
-		private readonly Net.Core.BackgroundRepeater _ioThread;
+		private readonly ArtZilla.Net.Core.BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<Type, string> _paths
 			= new ConcurrentDictionary<Type, string>();
 		private readonly ConcurrentDictionary<(Type Config, Type KeyType, object KeyValue), string> _paths2
