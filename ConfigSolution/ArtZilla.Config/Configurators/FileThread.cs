@@ -30,7 +30,7 @@ namespace ArtZilla.Config.Configurators {
 			AppName = appName;
 			Company = company;
 
-			_ioThread = new ArtZilla.Net.Core.BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), AsyncWrite);
+			_ioThread = new Net.Core.BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), AsyncWrite);
 		}
 
 		public override bool TryLoad<TConfiguration>(out TConfiguration configuration) {
@@ -237,7 +237,7 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		private bool _isSaving;
-		private readonly ArtZilla.Net.Core.BackgroundRepeater _ioThread;
+		private readonly Net.Core.BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<Type, string> _paths
 			= new ConcurrentDictionary<Type, string>();
 		private readonly ConcurrentDictionary<(Type Config, Type KeyType, object KeyValue), string> _paths2
