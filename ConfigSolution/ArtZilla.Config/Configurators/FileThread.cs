@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using ArtZilla.Net.Core;
 
 namespace ArtZilla.Config.Configurators {
 	public class FileThread: IoThread {
