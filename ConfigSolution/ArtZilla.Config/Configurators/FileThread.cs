@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using ArtZilla.Net.Core;
-using ArtZilla.Net.Core.Extensions;
 
 namespace ArtZilla.Config.Configurators {
 	public class FileThread: IoThread {
 		public const string DefaultExtension = "cfg";
 		public const string ExtensionSeparator = ".";
+
 		public string AppName { get; set; }
 
 		public string Company { get; set; }
@@ -31,7 +30,7 @@ namespace ArtZilla.Config.Configurators {
 			AppName = appName;
 			Company = company;
 
-			_ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), AsyncWrite);
+			_ioThread = new ArtZilla.Net.Core.BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), AsyncWrite);
 		}
 
 		public override bool TryLoad<TConfiguration>(out TConfiguration configuration) {
@@ -143,13 +142,13 @@ namespace ArtZilla.Config.Configurators {
 				: Environment.SpecialFolder.CommonApplicationData);
 
 		private string GetFileName<TConfiguration>()
-			=> typeof(TConfiguration).Name.Combine(ExtensionSeparator, Extension);
+			=> ArtZilla.Net.Core.Extensions.StringExtensions.Combine(typeof(TConfiguration).Name, ExtensionSeparator, Extension);
 
 		private string GetFileName<TKey, TConfiguration>(TKey key)
-			=> key.ToString().Combine(ExtensionSeparator, Extension);
+			=> ArtZilla.Net.Core.Extensions.StringExtensions.Combine(key.ToString(), ExtensionSeparator, Extension);
 
 		private string GetFileName(Type type)
-			=> type.Name.Combine(ExtensionSeparator, Extension);
+			=> ArtZilla.Net.Core.Extensions.StringExtensions.Combine(type.Name, ExtensionSeparator, Extension);
 
 		private string PathEx(params string[] paths)
 			=> Path.Combine(paths.Where(path => !string.IsNullOrWhiteSpace(path)).ToArray());
@@ -238,7 +237,7 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		private bool _isSaving;
-		private readonly BackgroundRepeater _ioThread;
+		private readonly ArtZilla.Net.Core.BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<Type, string> _paths
 			= new ConcurrentDictionary<Type, string>();
 		private readonly ConcurrentDictionary<(Type Config, Type KeyType, object KeyValue), string> _paths2
