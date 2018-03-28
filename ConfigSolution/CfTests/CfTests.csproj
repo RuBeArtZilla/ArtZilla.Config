@@ -68,9 +68,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ConfigFramework\ConfigFramework.csproj">
+    <ProjectReference Include="..\ArtZilla.Config\ArtZilla.Config.csproj">
       <Project>{f0272b4c-10ae-4bd1-8b65-09abeabfaa90}</Project>
-      <Name>ConfigFramework</Name>
+      <Name>ArtZilla.Config</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
