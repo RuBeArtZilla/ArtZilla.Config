@@ -47,6 +47,9 @@ namespace CfTests {
 		[TestMethod]
 		public void KeysTest() => RunAll(KeysExistTest);
 
+		[TestMethod]
+		public void EnumPropertyTest() => RunAll(EnumPropertyTest);
+
 		protected virtual void KeysExistTest(T ctr) {
 			var cfr = ctr.As<int, ITestConfiguration>();
 			cfr.Reset(0);
@@ -162,6 +165,14 @@ namespace CfTests {
 			ctr.Save<IComplexConfig>(cfg);
 
 			Assert.IsTrue(AssertCfg.AreEquals(ctr.Readonly<IComplexConfig>().ValueArray, ComplexConfig.MagicArray));
+		}
+
+		protected virtual void EnumPropertyTest(T ctr) {
+			ctr.Reset<IConfigWithEnum>();
+
+			var cfg = ctr.Copy<IConfigWithEnum>();
+			Assert.AreEqual(Girls.Homura, cfg.MyWaifu);
+			Assert.AreEqual(Girls.Mami, cfg.Headless);
 		}
 	}
 }

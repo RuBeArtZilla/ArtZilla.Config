@@ -211,6 +211,14 @@ namespace ArtZilla.Config.Builders {
 						break;
 					}
 
+				case Enum x: {
+					var type = x.GetType();
+					var underlyingType = Enum.GetUnderlyingType(type);
+					var v = Convert.ChangeType(x, underlyingType);
+					PushObject(il, v);
+					break;
+				}
+
 				default:
 					throw new BuildException("Type " + value.GetType() + " not supported yet.");
 			}
