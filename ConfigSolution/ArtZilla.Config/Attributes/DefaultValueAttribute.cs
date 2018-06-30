@@ -1,40 +1,193 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using ArtZilla.Config.Builders;
 
 namespace ArtZilla.Config {
-	[AttributeUsage(AttributeTargets.Property)]
-	public class DefaultValueAttribute: Attribute {
-		public Object Value { get; }
+	public interface IDefaultValueAttribute {
+		void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb);
+	}
 
-		public DefaultValueAttribute(Object value)
+	[AttributeUsage(AttributeTargets.Property)]
+	public class DefaultValueAttribute : Attribute, IDefaultValueAttribute {
+		public object Value { get; }
+
+		public DefaultValueAttribute(object value)
 			=> Value = value;
 
-		public DefaultValueAttribute(Type type, String strValue)
+		[Obsolete]
+		public DefaultValueAttribute(Type type, string strValue)
 			=> Value = ConvertFromString(type, strValue);
 
-		static Object ConvertFromString(Type type, String strValue)
+		static object ConvertFromString(Type type, string strValue)
 			=> _converters.TryGetValue(type, out var f)
 				? f(strValue)
 				: throw new Exception("Can't convert " + strValue + " to instance of type " + type.Name);
 
-		static Dictionary<Type, Func<String, Object>> _converters
-			= new Dictionary<Type, Func<String, Object>> {
-				[typeof(Byte)] = s => Byte.Parse(s),
-				[typeof(SByte)] = s => SByte.Parse(s),
-				[typeof(Int16)] = s => Int16.Parse(s),
-				[typeof(Int32)] = s => Int32.Parse(s),
-				[typeof(Int64)] = s => Int64.Parse(s),
-				[typeof(UInt16)] = s => UInt16.Parse(s),
-				[typeof(UInt32)] = s => UInt32.Parse(s),
-				[typeof(UInt64)] = s => UInt64.Parse(s),
+		static Dictionary<Type, Func<string, object>> _converters
+			= new Dictionary<Type, Func<string, object>> {
+				[typeof(byte)] = s => byte.Parse(s),
+				[typeof(sbyte)] = s => sbyte.Parse(s),
+				[typeof(short)] = s => short.Parse(s),
+				[typeof(int)] = s => int.Parse(s),
+				[typeof(long)] = s => long.Parse(s),
+				[typeof(ushort)] = s => ushort.Parse(s),
+				[typeof(uint)] = s => uint.Parse(s),
+				[typeof(ulong)] = s => ulong.Parse(s),
 
-				[typeof(Single)] = s => Single.Parse(s),
-				[typeof(Double)] = s => Double.Parse(s),
-				[typeof(Decimal)] = s => Decimal.Parse(s, NumberStyles.Number),
-				[typeof(Boolean)] = s => Boolean.Parse(s),
+				[typeof(float)] = s => float.Parse(s),
+				[typeof(double)] = s => double.Parse(s),
+				[typeof(decimal)] = s => decimal.Parse(s, NumberStyles.Number),
+				[typeof(bool)] = s => bool.Parse(s),
 
-				[typeof(String)] = s => s,
+				[typeof(string)] = s => s,
 			};
+
+		public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
+			il.Emit(OpCodes.Ldarg_0);
+			PushObject(il, Value);
+			il.Emit(OpCodes.Stfld, fb);
+		}
+
+		internal static void PushObject(ILGenerator il, object value) {
+			switch (value) {
+				case SByte x: {
+					il.Emit(OpCodes.Ldc_I4, (Int32) x);
+					il.Emit(OpCodes.Conv_I1);
+					return;
+				}
+
+				case Int16 x: {
+					il.Emit(OpCodes.Ldc_I4, (Int32) x);
+					il.Emit(OpCodes.Conv_I2);
+					return;
+				}
+
+				case Int32 x: {
+					il.Emit(OpCodes.Ldc_I4, x);
+					return;
+				}
+
+				case Int64 x: {
+					il.Emit(OpCodes.Ldc_I8, x);
+					return;
+				}
+
+				case Byte x: {
+					il.Emit(OpCodes.Ldc_I4, (Int32) x);
+					il.Emit(OpCodes.Conv_I1);
+					return;
+				}
+
+				case UInt16 x: {
+					il.Emit(OpCodes.Ldc_I4, x);
+					il.Emit(OpCodes.Conv_I2);
+					return;
+				}
+
+				case UInt32 x: {
+					il.Emit(OpCodes.Ldc_I4, x);
+					return;
+				}
+
+				case UInt64 x: {
+					il.Emit(OpCodes.Ldc_I8, (Int64) x);
+					return;
+				}
+
+				case Char x: {
+					il.Emit(OpCodes.Ldc_I4, x);
+					return;
+				}
+
+				case Boolean x: {
+					il.Emit(x ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+					return;
+				}
+
+				case Single x: {
+					il.Emit(OpCodes.Ldc_R4, x);
+					return;
+				}
+
+				case Double x: {
+					il.Emit(OpCodes.Ldc_R8, x);
+					return;
+				}
+
+				case String x: {
+					il.Emit(OpCodes.Ldstr, x);
+					return;
+				}
+
+				case Enum x: {
+					var type = x.GetType();
+					var underlyingType = Enum.GetUnderlyingType(type);
+					var v = Convert.ChangeType(x, underlyingType);
+					PushObject(il, v);
+					return;
+				}
+			}
+
+			throw new BuildException("Type " + value.GetType() + " not supported yet.");
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Property)]
+	public class DefaultValueByCtorAttribute : Attribute, IDefaultValueAttribute {
+		public Type Type { get; }
+
+		public object[] Args { get; }
+
+		public ConstructorInfo Ctor { get; }
+
+		public DefaultValueByCtorAttribute(Type type, params object[] args) {
+			Type = type;
+			Args = args;
+			Ctor = type.GetConstructor(args.Select(v => v.GetType()).ToArray());
+		}
+
+		public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
+			il.Emit(OpCodes.Ldarg_0);
+
+			foreach (var arg in Args)
+				DefaultValueAttribute.PushObject(il, arg);
+
+			il.Emit(OpCodes.Newobj, Ctor);
+			il.Emit(OpCodes.Stfld, fb);
+
+			/*
+			  IL_0089: ldarg.0      // this
+				IL_008a: ldstr        "{D1F71EC6-76A6-40F8-8910-68E67D753CD4}"
+				IL_008f: newobj       instance void [mscorlib]System.Guid::.ctor(string)
+				IL_0094: stfld        valuetype [mscorlib]System.Guid CfTests.TestConfiguration::'<Guid>k__BackingField'
+				IL_0099: ldarg.0      // this
+				IL_009a: call         instance void [mscorlib]System.Object::.ctor()
+				IL_009f: nop          
+				IL_00a0: ret
+			 */
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Property)]
+	public class DefaultValueByMethodAttribute : Attribute, IDefaultValueAttribute {
+		public Type Type { get; }
+
+		public object[] Args { get; }
+
+		public string MethodName { get; }
+
+		public DefaultValueByMethodAttribute(Type type, string methodName, params object[] args) {
+			Type = type;
+			Args = args;
+			MethodName = methodName;
+		}
+
+		public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
+			throw new NotImplementedException("Maybe later...");
+		}
 	}
 }

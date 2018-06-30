@@ -27,6 +27,9 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 
 		[DefaultValue(4)]
 		Girls Headless { get; set; }
+
+		[DefaultValueByCtor(typeof(Guid), "{D1F71EC6-76A6-40F8-8910-68E67D753CD4}")]
+		Guid SomeGuid { get; set; }
 	}
 
 	public class ComplexConfig : IComplexConfig {

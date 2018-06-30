@@ -1,7 +1,5 @@
 ﻿namespace ArtZilla.Config {
-	/// <summary>
-	/// Represent configuration
-	/// </summary>
+	/// <summary> Base configuration interface </summary>
 	public interface IConfiguration {
 		void Copy(IConfiguration source);
 	}

@@ -96,13 +96,12 @@ namespace ArtZilla.Config.Builders {
 			foreach (var pi in typeof(T).GetProperties()) {
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
-		
+
 				il.Emit(OpCodes.Callvirt, pi.GetGetMethod());
 				il.Emit(OpCodes.Call, pi.GetSetMethod());
 			}
 
 			il.Emit(OpCodes.Ret);
-
 			Tb.DefineMethodOverride(mb, mi);
 		}
 
@@ -115,11 +114,8 @@ namespace ArtZilla.Config.Builders {
 			var ctor = Tb.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, Type.EmptyTypes);
 			var il = ctor.GetILGenerator();
 
-			foreach (var dv in _fieldValues) {
-				il.Emit(OpCodes.Ldarg_0);
-				PushObject(il, dv.Item2);
-				il.Emit(OpCodes.Stfld, dv.Item1);
-			}
+			foreach (var dv in _fieldValues)
+				dv.Attr.GenerateFieldCtorCode(il, dv.Fb);
 
 			il.Emit(OpCodes.Ret);
 		}
@@ -140,7 +136,7 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ret);
 		}
 
-		protected static void PushObject(ILGenerator il, Object value) {
+		protected static void PushObject(ILGenerator il, object value) {
 			switch (value) {
 				case SByte x: {
 						il.Emit(OpCodes.Ldc_I4, (Int32) x);
@@ -296,11 +292,11 @@ namespace ArtZilla.Config.Builders {
 		protected virtual String GetFieldName(PropertyInfo pi)
 			=> "_" + pi.Name;
 
-		protected virtual void AddDefaultFieldValue(FieldBuilder fb, Object value)
-			=> _fieldValues.Add(new Tuple<FieldBuilder, Object>(fb, value));
+		protected virtual void AddDefaultFieldValue(FieldBuilder fb, IDefaultValueAttribute attr)
+			=> _fieldValues.Add((fb, attr));
 
-		readonly List<FieldBuilder> _fields = new List<FieldBuilder>();
-		readonly List<MethodBuilder> _propMethods = new List<MethodBuilder>();
-		protected readonly List<Tuple<FieldBuilder, Object>> _fieldValues = new List<Tuple<FieldBuilder, Object>>();
+		private readonly List<FieldBuilder> _fields = new List<FieldBuilder>();
+		private readonly List<MethodBuilder> _propMethods = new List<MethodBuilder>();
+		protected readonly List<(FieldBuilder Fb, IDefaultValueAttribute Attr)> _fieldValues = new List<(FieldBuilder Fb, IDefaultValueAttribute Attr)>();
 	}
 }

@@ -41,12 +41,15 @@ namespace CfTests {
 		public Char Char{ get; set; } = DefaultChar;
 		public String String { get; set; } = DefaultString;
 
+		public Guid Guid { get; set; } = new Guid("{D1F71EC6-76A6-40F8-8910-68E67D753CD4}");
+
 		public void Copy(IConfiguration cfg)
 			=> Copy((ITestConfiguration)cfg);
 
 		public void Copy(ITestConfiguration cfg) {
 			Int32 = cfg.Int32;
 			String = cfg.String;
+			Guid = new Guid("{01F71EC6-76A6-40F8-8910-68E67D753CD4}"); 
 
 			foreach (var p in typeof(ITestConfiguration).GetProperties())
 				p.SetValue(this, p.GetValue(cfg));

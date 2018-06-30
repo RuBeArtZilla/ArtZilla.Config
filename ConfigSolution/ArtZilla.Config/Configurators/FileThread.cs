@@ -31,7 +31,7 @@ namespace ArtZilla.Config.Configurators {
 			AppName = appName;
 			Company = company;
 
-			_ioThread = new Net.Core.BackgroundRepeater(RepeatedWrite, TimeSpan.FromSeconds(1), AsyncWrite);
+			_ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.Zero, AsyncWrite);
 		}
 
 		public override bool TryLoad<TConfiguration>(out TConfiguration configuration) {
@@ -143,13 +143,13 @@ namespace ArtZilla.Config.Configurators {
 				: Environment.SpecialFolder.CommonApplicationData);
 
 		private string GetFileName<TConfiguration>()
-			=> ArtZilla.Net.Core.Extensions.StringExtensions.Combine(typeof(TConfiguration).Name, ExtensionSeparator, Extension);
+			=> Net.Core.Extensions.StringExtensions.Combine(typeof(TConfiguration).Name, ExtensionSeparator, Extension);
 
 		private string GetFileName<TKey, TConfiguration>(TKey key)
-			=> ArtZilla.Net.Core.Extensions.StringExtensions.Combine(key.ToString(), ExtensionSeparator, Extension);
+			=> Net.Core.Extensions.StringExtensions.Combine(key.ToString(), ExtensionSeparator, Extension);
 
 		private string GetFileName(Type type)
-			=> ArtZilla.Net.Core.Extensions.StringExtensions.Combine(type.Name, ExtensionSeparator, Extension);
+			=> Net.Core.Extensions.StringExtensions.Combine(type.Name, ExtensionSeparator, Extension);
 
 		private string PathEx(params string[] paths)
 			=> Path.Combine(paths.Where(path => !string.IsNullOrWhiteSpace(path)).ToArray());
@@ -183,9 +183,11 @@ namespace ArtZilla.Config.Configurators {
 					items.Add(_toSave.Take());
 
 				// saving items
-				foreach ((var path, var type, var value) in items.Distinct()) {
+				foreach (var (path, type, value) in items.Distinct())
 					SaveToFile(path, type, value);
-				}
+
+				if (token.IsCancellationRequested && _toSave.Count > 0)
+					Console.WriteLine("Has unsaved changes.");
 			} finally {
 				_isSaving = false;
 			}
@@ -238,7 +240,7 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		private bool _isSaving;
-		private readonly ArtZilla.Net.Core.BackgroundRepeater _ioThread;
+		private readonly BackgroundRepeater _ioThread;
 		private readonly ConcurrentDictionary<Type, string> _paths
 			= new ConcurrentDictionary<Type, string>();
 		private readonly ConcurrentDictionary<(Type Config, Type KeyType, object KeyValue), string> _paths2

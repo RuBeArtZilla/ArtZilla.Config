@@ -65,7 +65,8 @@ namespace ArtZilla.Config.Configurators {
 		protected readonly IIoThread Io;
 	}
 
-	public class LazyConfigurator<TKey, TConfiguration>: MemoryConfigurator<TKey, TConfiguration> where TConfiguration : IConfiguration {
+	public class LazyConfigurator<TKey, TConfiguration> 
+		: MemoryConfigurator<TKey, TConfiguration> where TConfiguration : IConfiguration {
 		public LazyConfigurator(IIoThread thread)
 			=> Io = thread ?? throw new ArgumentNullException(nameof(thread));
 
@@ -89,7 +90,7 @@ namespace ArtZilla.Config.Configurators {
 			if (base.IsExist(key))
 				return true;
 
-			return Io.TryLoad<TKey, TConfiguration>(key, out var configuration);
+			return Io.TryLoad<TKey, TConfiguration>(key, out _);
 		}
 
 		protected override TConfiguration Load(TKey key)

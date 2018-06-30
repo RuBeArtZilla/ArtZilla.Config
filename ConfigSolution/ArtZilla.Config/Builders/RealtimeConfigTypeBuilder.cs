@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 
 namespace ArtZilla.Config.Builders {
 	public class RealtimeConfigTypeBuilder<T>: NotifyingConfigTypeBuilder<T> where T : IConfiguration {
-		protected override String ClassPrefix => "Realtime";
+		protected override string ClassPrefix => "Realtime";
 
 		protected override void AddInterfaces() {
 			AddRealtimeImplementation();

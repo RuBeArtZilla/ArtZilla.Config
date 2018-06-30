@@ -156,11 +156,11 @@ namespace CfTests {
 			Assert.IsFalse(AssertCfg.AreEquals(ctr.Readonly<IComplexConfig>().ValueArray, ComplexConfig.MagicArray),
 				"Change test magic number");
 
-			var cfg = new ComplexConfig();
-
-			cfg.ValueArray = ComplexConfig.MagicArray;
-			cfg.ValueList = new List<int>(ComplexConfig.MagicArray);
-			cfg.ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary);
+			var cfg = new ComplexConfig {
+				ValueArray = ComplexConfig.MagicArray,
+				ValueList = new List<int>(ComplexConfig.MagicArray),
+				ValueDictionary = new Dictionary<int, string>(ComplexConfig.MagicDictionary)
+			};
 
 			ctr.Save<IComplexConfig>(cfg);
 
@@ -170,9 +170,13 @@ namespace CfTests {
 		protected virtual void EnumPropertyTest(T ctr) {
 			ctr.Reset<IConfigWithEnum>();
 
-			var cfg = ctr.Copy<IConfigWithEnum>();
+			var cfg = ctr.Realtime<IConfigWithEnum>();
 			Assert.AreEqual(Girls.Homura, cfg.MyWaifu);
 			Assert.AreEqual(Girls.Mami, cfg.Headless);
-		}
+			Assert.AreEqual(new Guid("{D1F71EC6-76A6-40F8-8910-68E67D753CD4}"), cfg.SomeGuid);
+
+			cfg.MyWaifu = Girls.Madoka;
+			Assert.AreEqual(Girls.Madoka, ctr.Readonly<IConfigWithEnum>().MyWaifu);
+		} 
 	}
 }

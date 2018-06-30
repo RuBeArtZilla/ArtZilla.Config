@@ -17,9 +17,9 @@ namespace ArtZilla.Config.Builders {
 			// using this field to store property values
 			var fb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
 
-			var dv = pi.GetCustomAttributes(typeof(DefaultValueAttribute), true).OfType<DefaultValueAttribute>().FirstOrDefault();
+			var dv = pi.GetCustomAttributes(true).OfType<IDefaultValueAttribute>().FirstOrDefault();
 			if (dv != null)
-				AddDefaultFieldValue(fb, dv.Value);
+				AddDefaultFieldValue(fb, dv);
 
 			base.AddProperty(pi);
 		}
