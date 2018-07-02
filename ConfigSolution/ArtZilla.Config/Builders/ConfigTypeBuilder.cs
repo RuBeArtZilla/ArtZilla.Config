@@ -66,8 +66,14 @@ namespace ArtZilla.Config.Builders {
 
 		protected virtual void AddInterfaces() {
 			// Добавляем интерфейс конфигурации по умолчанию
-			AddInterfaceImplementation(typeof(T));
+			RecursiveAddInterfaces(typeof(T));
 			AddIConfigurationImplementation();
+
+			void RecursiveAddInterfaces(Type type) {
+				foreach (var intf in type.GetInterfaces())
+					AddInterfaceImplementation(intf);
+				AddInterfaceImplementation(type);
+			}
 		}
 
 		protected virtual void AddInterfaceImplementation(Type intfType) {

@@ -21,15 +21,20 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 		Mami = 4,
 	}
 
-	public interface IConfigWithEnum : IConfiguration {
+	public interface IConfigWithGuid : IConfiguration {
+		[DefaultValueByCtor(typeof(Guid), "{D1F71EC6-76A6-40F8-8910-68E67D753CD4}")]
+		Guid SomeGuid { get; set; }
+
+		Guid NextGuid { get; set; }
+	}
+
+	public interface IConfigWithEnum : IConfigWithGuid {
 		[DefaultValue(Girls.Homura)]
 		Girls MyWaifu { get; set; }
 
 		[DefaultValue(4)]
 		Girls Headless { get; set; }
 
-		[DefaultValueByCtor(typeof(Guid), "{D1F71EC6-76A6-40F8-8910-68E67D753CD4}")]
-		Guid SomeGuid { get; set; }
 	}
 
 	public class ComplexConfig : IComplexConfig {
@@ -45,7 +50,7 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 				[4] = "Quick brown fox jumps over the lazy dog",
 				[8] = "Эй, жлоб! Где туз? Прячь юных съёмщиц в шкаф.",
 				[15] = "いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす",
-				[16] = String.Empty,
+				[16] = string.Empty,
 				[23] = null,
 				[42] = "All your base are belong to us",
 			};

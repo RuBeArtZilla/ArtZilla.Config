@@ -23,7 +23,6 @@
 		<AssemblyTitle>Configuration Framework</AssemblyTitle>
 		<Description>Configuration Framework</Description>
 		<Summary>Configuration Framework</Summary>
-		<PackageReleaseNotes>First sucessfull build with jenkins</PackageReleaseNotes>
 
 		<PackageCopyright>Copyright (c) 2017-2018 Artyom Fomin</PackageCopyright>
 		<PackageTags>ArtZilla, .Net, Configuration Framework</PackageTags>
@@ -34,9 +33,9 @@
 		<Copyright>Copyright (c) 2017-2018 Artyom Fomin</Copyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.2.13</Version>
-		<FileVersion>0.1.2.13</FileVersion>
-		<AssemblyVersion>0.1.2.13</AssemblyVersion>
+		<Version>0.1.2.14</Version>
+		<FileVersion>0.1.2.14</FileVersion>
+		<AssemblyVersion>0.1.2.14</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 		
 		<IncludeSymbols>true</IncludeSymbols>
