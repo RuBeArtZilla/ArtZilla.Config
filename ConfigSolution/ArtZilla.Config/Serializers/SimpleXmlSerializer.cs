@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
 namespace ArtZilla.Config.Configurators {
@@ -12,6 +13,17 @@ namespace ArtZilla.Config.Configurators {
 
 		private XmlSerializer GetSerializer(Type type)
 			=> new XmlSerializer(type);
+	}
+
+	public class OtherXmlSerializer : IStreamSerializer {
+		public object Deserialize(Stream stream, Type type)
+			=> GetSerializer(type).ReadObject(stream);
+
+		public void Serialize(Stream stream, Type type, object obj)
+			=> GetSerializer(type).WriteObject(stream, obj);
+
+		private DataContractSerializer GetSerializer(Type type)
+			=> new DataContractSerializer(type);
 	}
 
 	public class DarkSerializer {

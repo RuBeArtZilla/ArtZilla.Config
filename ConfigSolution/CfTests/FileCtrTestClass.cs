@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ArtZilla.Config.Configurators;
+using ArtZilla.Config.Tests.TestConfigurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
@@ -24,11 +25,12 @@ namespace CfTests {
 			Console.WriteLine("Clear settings.");
 			x.Reset();
 
+			var cfg = x.Realtime();
+
 			// should be in the default state
-			AssertCfg.IsDefault(x.Readonly());
+			AssertCfg.IsDefault(cfg);
 
 			Console.WriteLine("Changing settings");
-			var cfg = x.Realtime();
 			cfg.Int32 = MagicNumber;
 			cfg.String = MagicLine;
 
@@ -67,6 +69,18 @@ namespace CfTests {
 			var s3 = Create();
 			var z = s3.As<int, ITestConfiguration>();
 			Assert.IsFalse(z.IsExist(key));
+		}
+
+		[TestMethod]
+		public void JustExample() {
+			var s = new FileConfigurator("SerializationExample", "az.dev");
+			var x1 = s.Realtime<ITestConfiguration>();
+			x1.String = "Don't forget. Always, somewhere, someone is fighting for you. As long as you remember her, you are not alone.";
+			var list = x1.GetType().GetProperty(nameof(ITestConfiguration.String))?.GetCustomAttributes(true);
+
+			var x2 = s.Realtime<IComplexConfig>();
+			x2.ValueArray = new[] {4, 8, 15, 16, 23, 42};
+			s.Flush();
 		}
 	}
 }

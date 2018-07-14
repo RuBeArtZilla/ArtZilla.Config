@@ -235,8 +235,14 @@ namespace ArtZilla.Config.Configurators {
 		private void Remove(string path) {
 			WaitPath(path);
 			var fi = new FileInfo(path);
-			if (fi.Exists)
-				fi.Delete();
+			if (!fi.Exists) return;
+
+#if DEBUG && TRACE
+			Console.WriteLine($"Content of {fi.FullName}, that will be removed:");
+			Console.WriteLine(fi.OpenText().ReadToEnd());
+#endif
+
+			fi.Delete();
 		}
 
 		private bool _isSaving;

@@ -48,6 +48,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertCfg.cs" />
@@ -59,7 +60,9 @@
     <Compile Include="NotifyingTestCfg.cs" />
     <Compile Include="ReadonlyTestCfg.cs" />
     <Compile Include="RealtimeTestCfg.cs" />
+    <Compile Include="TestConfigurations\Hero.cs" />
     <Compile Include="TestConfigurations\IComplexConfig.cs" />
+    <Compile Include="TestConfigurations\IListConfiguration.cs" />
     <Compile Include="TestConfigurations\INumCfg.cs" />
     <Compile Include="TestConfigurations\ITestConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

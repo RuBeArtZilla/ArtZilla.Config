@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -39,9 +41,6 @@ namespace ArtZilla.Config.Builders {
 
 		protected virtual ModuleBuilder CreateModuleBuilder() {
 			var an = new AssemblyName("gen_" + typeof(T).Name);
-			/* var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
-			var moduleName = Path.ChangeExtension(an.Name, "dll");
-			return asm.DefineDynamicModule(moduleName, false);*/
 #if NET40
 			var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
 			var moduleName = Path.ChangeExtension(an.Name, "dll");
@@ -56,9 +55,9 @@ namespace ArtZilla.Config.Builders {
 		protected virtual TypeBuilder CreateTypeBuilder()
 			=> Mb.DefineType(GenerateClassName(), ClassAttributes);
 
-		protected virtual String GenerateClassName() {
+		protected virtual string GenerateClassName() {
 			var ns = typeof(T).Namespace;
-			if (!String.IsNullOrEmpty(ns))
+			if (!string.IsNullOrEmpty(ns))
 				ns += ".";
 
 			return ns + ClassPrefix + "_" + typeof(T).Name;
@@ -68,6 +67,10 @@ namespace ArtZilla.Config.Builders {
 			// Добавляем интерфейс конфигурации по умолчанию
 			RecursiveAddInterfaces(typeof(T));
 			AddIConfigurationImplementation();
+
+			var ctor = typeof(DataContractAttribute).GetConstructor(Type.EmptyTypes);
+			Debug.Assert(ctor != null, nameof(ctor) + " != null");
+			Tb.SetCustomAttribute(new CustomAttributeBuilder(ctor, new object[0]));
 
 			void RecursiveAddInterfaces(Type type) {
 				foreach (var intf in type.GetInterfaces())
@@ -142,93 +145,14 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ret);
 		}
 
-		protected static void PushObject(ILGenerator il, object value) {
-			switch (value) {
-				case SByte x: {
-						il.Emit(OpCodes.Ldc_I4, (Int32) x);
-						il.Emit(OpCodes.Conv_I1);
-						break;
-					}
-
-				case Int16 x: {
-						il.Emit(OpCodes.Ldc_I4, (Int32) x);
-						il.Emit(OpCodes.Conv_I2);
-						break;
-					}
-
-				case Int32 x: {
-						il.Emit(OpCodes.Ldc_I4, x);
-						break;
-					}
-
-				case Int64 x: {
-						il.Emit(OpCodes.Ldc_I8, x);
-						break;
-					}
-
-				case Byte x: {
-						il.Emit(OpCodes.Ldc_I4, (Int32) x);
-						il.Emit(OpCodes.Conv_I1);
-						break;
-					}
-
-				case UInt16 x: {
-						il.Emit(OpCodes.Ldc_I4, x);
-						il.Emit(OpCodes.Conv_I2);
-						break;
-					}
-
-				case UInt32 x: {
-						il.Emit(OpCodes.Ldc_I4, x);
-						break;
-					}
-
-				case UInt64 x: {
-						il.Emit(OpCodes.Ldc_I8, (Int64) x);
-						break;
-					}
-
-				case Char x: {
-						il.Emit(OpCodes.Ldc_I4, x);
-						break;
-					}
-
-				case Boolean x: {
-						il.Emit(x ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-						break;
-					}
-
-				case Single x: {
-						il.Emit(OpCodes.Ldc_R4, x);
-						break;
-					}
-
-				case Double x: {
-						il.Emit(OpCodes.Ldc_R8, x);
-						break;
-					}
-
-				case String x: {
-						il.Emit(OpCodes.Ldstr, x);
-						break;
-					}
-
-				case Enum x: {
-					var type = x.GetType();
-					var underlyingType = Enum.GetUnderlyingType(type);
-					var v = Convert.ChangeType(x, underlyingType);
-					PushObject(il, v);
-					break;
-				}
-
-				default:
-					throw new BuildException("Type " + value.GetType() + " not supported yet.");
-			}
-		}
-
 		protected virtual void AddProperty(PropertyInfo pi) {
 			// создаем свойство
 			var pb = Tb.DefineProperty(pi.Name, pi.Attributes, pi.PropertyType, Type.EmptyTypes);
+
+			var ctor = typeof(DataMemberAttribute).GetConstructor(Type.EmptyTypes);
+			Debug.Assert(ctor != null, nameof(ctor) + " != null");
+			pb.SetCustomAttribute(new CustomAttributeBuilder(ctor, new object[0]));
+
 			if (pi.CanRead)
 				AddPropertyGetter(pi, pb);
 
@@ -298,11 +222,11 @@ namespace ArtZilla.Config.Builders {
 		protected virtual String GetFieldName(PropertyInfo pi)
 			=> "_" + pi.Name;
 
-		protected virtual void AddDefaultFieldValue(FieldBuilder fb, IDefaultValueAttribute attr)
+		protected virtual void AddDefaultFieldValue(FieldBuilder fb, IDefaultValueProvider attr)
 			=> _fieldValues.Add((fb, attr));
 
 		private readonly List<FieldBuilder> _fields = new List<FieldBuilder>();
 		private readonly List<MethodBuilder> _propMethods = new List<MethodBuilder>();
-		protected readonly List<(FieldBuilder Fb, IDefaultValueAttribute Attr)> _fieldValues = new List<(FieldBuilder Fb, IDefaultValueAttribute Attr)>();
+		protected readonly List<(FieldBuilder Fb, IDefaultValueProvider Attr)> _fieldValues = new List<(FieldBuilder Fb, IDefaultValueProvider Attr)>();
 	}
 }

@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.Serialization;
 using ArtZilla.Config;
+using ArtZilla.Config.Tests.TestConfigurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
+	[DataContract]
 	public class TestConfiguration : ITestConfiguration {
 		public const SByte DefaultInt8 = -8;
 		public const Int16 DefaultInt16 = -16;
@@ -39,9 +45,15 @@ namespace CfTests {
 		public Decimal Decimal { get; set; } = DefaultDecimal;
 
 		public Char Char{ get; set; } = DefaultChar;
+
+		[DataMember]
 		public String String { get; set; } = DefaultString;
 
 		public Guid Guid { get; set; } = new Guid("{D1F71EC6-76A6-40F8-8910-68E67D753CD4}");
+
+		private IList<Hero> _heroes_1 = new List<Hero>();
+		private IList<Hero> _heroes_2 = new ReadOnlyCollection<Hero>(new Hero[0]);
+		private IList<Hero> _heroes_3 = new ObservableCollection<Hero>();
 
 		public void Copy(IConfiguration cfg)
 			=> Copy((ITestConfiguration)cfg);

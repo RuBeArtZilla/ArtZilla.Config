@@ -7,12 +7,12 @@ using System.Reflection.Emit;
 using ArtZilla.Config.Builders;
 
 namespace ArtZilla.Config {
-	public interface IDefaultValueAttribute {
+	public interface IDefaultValueProvider {
 		void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb);
 	}
 
 	[AttributeUsage(AttributeTargets.Property)]
-	public class DefaultValueAttribute : Attribute, IDefaultValueAttribute {
+	public class DefaultValueAttribute : Attribute, IDefaultValueProvider {
 		public object Value { get; }
 
 		public DefaultValueAttribute(object value)
@@ -137,7 +137,7 @@ namespace ArtZilla.Config {
 	}
 
 	[AttributeUsage(AttributeTargets.Property)]
-	public class DefaultValueByCtorAttribute : Attribute, IDefaultValueAttribute {
+	public class DefaultValueByCtorAttribute : Attribute, IDefaultValueProvider {
 		public Type Type { get; }
 
 		public object[] Args { get; }
@@ -173,7 +173,7 @@ namespace ArtZilla.Config {
 	}
 
 	[AttributeUsage(AttributeTargets.Property)]
-	public class DefaultValueByMethodAttribute : Attribute, IDefaultValueAttribute {
+	public class DefaultValueByMethodAttribute : Attribute, IDefaultValueProvider {
 		public Type Type { get; }
 
 		public object[] Args { get; }

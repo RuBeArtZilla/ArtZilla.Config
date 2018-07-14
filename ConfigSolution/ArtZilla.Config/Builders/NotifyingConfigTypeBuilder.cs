@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -11,12 +14,31 @@ namespace ArtZilla.Config.Builders {
 	}
 
 	public class NotifyingConfigTypeBuilder<T>: CopyConfigTypeBuilder<T> where T : IConfiguration {
-		protected override String ClassPrefix => "Notifying";
+		class NotifyingIListDefaultValueProvider : IDefaultValueProvider {
+			public NotifyingIListDefaultValueProvider(Type itemType) => _itemType = itemType;
+
+			public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
+				var type = typeof(ObservableCollection<>).MakeGenericType(_itemType);
+				var ctor = type.GetConstructor(Type.EmptyTypes); 
+				Debug.Assert(ctor != null, nameof(ctor) + " != null");
+
+				il.Emit(OpCodes.Ldarg_0);
+				il.Emit(OpCodes.Newobj, ctor);
+				il.Emit(OpCodes.Stfld, fb);
+			}
+
+			private readonly Type _itemType;
+		}
+
+		protected override string ClassPrefix => "Notifying";
 
 		protected override void AddInterfaces() {
 			AddInpcImplementation();
 			base.AddInterfaces();
 		}
+
+		protected override IDefaultValueProvider GetIListDefaultValue(PropertyInfo pi) 
+			=> new NotifyingIListDefaultValueProvider(pi.PropertyType.GetGenericArguments()[0]);
 
 		protected virtual void AddInpcImplementation() {
 			// todo: refactor this method?
@@ -36,13 +58,18 @@ namespace ArtZilla.Config.Builders {
 
 			{
 				var ibaseMethod = typeof(INotifyPropertyChanged).GetMethod("add_PropertyChanged");
+				Debug.Assert(ibaseMethod != null, nameof(ibaseMethod) + " != null");
+
 				var addMethod = Tb.DefineMethod("add_PropertyChanged",
 						ibaseMethod.Attributes ^ MethodAttributes.Abstract,
 						ibaseMethod.CallingConvention,
 						ibaseMethod.ReturnType,
 						new[] { typeof(PropertyChangedEventHandler) });
-				var generator = addMethod.GetILGenerator();
+
 				var combine = typeof(Delegate).GetMethod("Combine", new[] { typeof(Delegate), typeof(Delegate) });
+				Debug.Assert(combine != null, nameof(combine) + " != null");
+
+				var generator = addMethod.GetILGenerator();
 				generator.Emit(OpCodes.Ldarg_0);
 				generator.Emit(OpCodes.Ldarg_0);
 				generator.Emit(OpCodes.Ldfld, field);
@@ -56,12 +83,16 @@ namespace ArtZilla.Config.Builders {
 
 			{
 				var ibaseMethod = typeof(INotifyPropertyChanged).GetMethod("remove_PropertyChanged");
+				Debug.Assert(ibaseMethod != null, nameof(ibaseMethod) + " != null");
+
 				var removeMethod = Tb.DefineMethod("remove_PropertyChanged",
 						ibaseMethod.Attributes ^ MethodAttributes.Abstract,
 						ibaseMethod.CallingConvention,
 						ibaseMethod.ReturnType,
 						new[] { typeof(PropertyChangedEventHandler) });
 				var remove = typeof(Delegate).GetMethod("Remove", new[] { typeof(Delegate), typeof(Delegate) });
+				Debug.Assert(remove != null, nameof(remove) + " != null");
+
 				var generator = removeMethod.GetILGenerator();
 				generator.Emit(OpCodes.Ldarg_0);
 				generator.Emit(OpCodes.Ldarg_0);
@@ -98,7 +129,7 @@ namespace ArtZilla.Config.Builders {
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
 
-			Label endOfMethod = il.DefineLabel();
+			var endOfMethod = il.DefineLabel();
 
 			// comparing property old and new value.
 			il.Emit(OpCodes.Ldarg_0);

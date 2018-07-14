@@ -50,6 +50,9 @@ namespace CfTests {
 		[TestMethod]
 		public void EnumPropertyTest() => RunAll(EnumPropertyTest);
 
+		[TestMethod]
+		public void ListsPropertyTest() => RunAll(ListsPropertyTest);
+
 		protected virtual void KeysExistTest(T ctr) {
 			var cfr = ctr.As<int, ITestConfiguration>();
 			cfr.Reset(0);
@@ -177,6 +180,26 @@ namespace CfTests {
 
 			cfg.MyWaifu = Girls.Madoka;
 			Assert.AreEqual(Girls.Madoka, ctr.Readonly<IConfigWithEnum>().MyWaifu);
-		} 
+		}
+
+		protected virtual void ListsPropertyTest(T ctr) {
+			var x = ctr.As<IListConfiguration>();
+			x.Reset();
+
+			Assert.IsNotNull(x.Copy().Heroes);
+			Assert.IsNotNull(x.Realtime().Heroes);
+			Assert.IsNotNull(x.Readonly().Heroes);
+			Assert.IsNotNull(x.Notifying().Heroes);
+
+			x.Realtime().Heroes.Add(new Hero("Midoria"));
+			x.Realtime().Heroes.Add(new Hero("Saitama", 8999));
+			x.Realtime().Heroes.Add(new Hero("Homura", 9001));
+
+			Assert.AreEqual(3, x.Readonly().Heroes.Count);
+			Assert.AreEqual(9001, x.Notifying().Heroes[2].Power);
+
+			x.Reset();
+			Assert.AreEqual(0, x.Readonly().Heroes.Count);
+		}
 	}
 }

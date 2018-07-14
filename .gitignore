@@ -240,3 +240,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/ConfigSolution/.idea/.idea.ConfigSolution

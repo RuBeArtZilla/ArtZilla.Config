@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using ArtZilla.Config;
 using ArtZilla.Config.Configurators;
+using ArtZilla.Config.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
@@ -38,25 +39,29 @@ namespace CfTests {
 
 		[TestMethod]
 		public void RealtimeFileConfigurationEditTest() {
-			var appName = Guid.NewGuid().ToString();
-			var company = nameof(ArtZilla.Config);
-			var ctr1 = new FileConfigurator(appName, company);
-			ctr1.Reset<ITestConfiguration>();
+			var appName = DateTimeOffset.Now.Ticks.ToString();
+			var company = "ArtZilla.Config";
 
-			var cfg = ctr1.Realtime<ITestConfiguration>();
-			AssertCfg.IsDefault(cfg);
+			FileConfigurator ctr1 = null;
+			FileConfigurator ctr2 = null;
+			try {
+				ctr1 = new FileConfigurator(appName, company);
+				ctr1.Reset<ITestConfiguration>();
+				var cfg = ctr1.Realtime<ITestConfiguration>();
+				AssertCfg.IsDefault(cfg);
 
-			const string message = "Testing realtime";
-			cfg.String = message;
-			ctr1.Flush();
+				const string message = "Testing realtime";
+				cfg.String = message;
+				ctr1.Flush();
 
-			var ctr2 = new FileConfigurator(appName, company);
-			var other = ctr2.Readonly<ITestConfiguration>();
-			Assert.AreEqual(message, cfg.String, "realtime config not changed");
-			Assert.AreEqual(message, other.String, "readonly config not actual");
-
-			ctr1.Reset<ITestConfiguration>();
-			ctr2.Reset<ITestConfiguration>();
+				ctr2 = new FileConfigurator(appName, company);
+				var other = ctr2.Readonly<ITestConfiguration>();
+				Assert.AreEqual(message, cfg.String, "realtime config not changed");
+				Assert.AreEqual(message, other.String, "readonly config not actual");
+			} finally {
+				ctr1?.Reset<ITestConfiguration>();
+				ctr2?.Reset<ITestConfiguration>();
+			}
 		}
 
 		[TestMethod]
@@ -71,7 +76,7 @@ namespace CfTests {
 			var cfg = ctr.Realtime();
 			cfg.Int32 = 1234;
 
-			((IRealtimeConfiguration)cfg).PropertyChanged += PropertyChangedMethod;
+			cfg.AsRealtime().PropertyChanged += PropertyChangedMethod;
 			Assert.IsTrue(changes.Count == 0);
 
 			ctr.Reset();
