@@ -184,6 +184,10 @@ namespace CfTests {
 			Assert.AreEqual(Girls.Mami, cfg.Headless);
 			Assert.AreEqual(new Guid("{D1F71EC6-76A6-40F8-8910-68E67D753CD4}"), cfg.SomeGuid);
 
+			var newGuid = Guid.NewGuid();
+			cfg.SomeGuid = newGuid;
+			Assert.AreEqual(newGuid, cfg.SomeGuid);
+
 			cfg.MyWaifu = Girls.Madoka;
 			Assert.AreEqual(Girls.Madoka, ctr.Readonly<IConfigWithEnum>().MyWaifu);
 		}

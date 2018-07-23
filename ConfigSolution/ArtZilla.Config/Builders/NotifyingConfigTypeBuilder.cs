@@ -139,8 +139,9 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ldfld, fb);
 			il.Emit(OpCodes.Ldarg_1);
 
-			if (pi.PropertyType == typeof(DateTime)) {
-				var method = typeof(DateTime).GetMethod("op_Equality", new[] { typeof(DateTime), typeof(DateTime) });
+			var type = pi.PropertyType;
+			if (IsEqualityType(type)) {
+				var method = type.GetMethod("op_Equality", new[] { type, type });
 				Debug.Assert(method != null);
 
 				il.Emit(OpCodes.Call, method);
@@ -162,6 +163,10 @@ namespace ArtZilla.Config.Builders {
 			// this marks the return point
 			il.MarkLabel(endOfMethod);
 			il.Emit(OpCodes.Ret);
+		}
+
+		private bool IsEqualityType(Type type) {
+			return type.GetMethod("op_Equality", new[] { type, type }) != null;
 		}
 
 		protected MethodInfo _onPropertyChangedMethod;
