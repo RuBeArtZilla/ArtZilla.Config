@@ -34,7 +34,6 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 
 		[DefaultValue(4)]
 		Girls Headless { get; set; }
-
 	}
 
 	public class ComplexConfig : IComplexConfig {
@@ -54,6 +53,7 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 				[23] = null,
 				[42] = "All your base are belong to us",
 			};
+		private DateTime _date = DateTime.Now;
 
 		public int[] ValueArray { get; set; }
 			= DefaultArray;
@@ -64,8 +64,27 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 		public Dictionary<int, string> ValueDictionary { get; set; }
 			= new Dictionary<int, string>(DefaultDictionary);
 
+		public DateTime Date {
+			get { return _date; }
+			set {
+				if (_date == value)
+					return;
+				_date = value;
+				Console.WriteLine("some string");
+			}
+		}
+
 		public void Copy(IConfiguration source) {
 			// todo:
 		}
+	}
+
+	public interface IDateConfig : IConfiguration {
+		DateTime Date { get; set; }
+	}
+
+	public interface IDateConfigEx : IDateConfig {
+		[DefaultValueByMethod(typeof(DateTime), nameof(DateTime.Now))]
+		DateTime CreatedAt { get; set; }
 	}
 }

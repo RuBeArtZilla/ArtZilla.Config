@@ -53,6 +53,12 @@ namespace CfTests {
 		[TestMethod]
 		public void ListsPropertyTest() => RunAll(ListsPropertyTest);
 
+		[TestMethod]
+		public void DatesPropertyTest() => RunAll(DatesPropertyTest);
+
+		[TestMethod]
+		public void DatesExPropertyTest() => RunAll(DatesExPropertyTest);
+
 		protected virtual void KeysExistTest(T ctr) {
 			var cfr = ctr.As<int, ITestConfiguration>();
 			cfr.Reset(0);
@@ -200,6 +206,25 @@ namespace CfTests {
 
 			x.Reset();
 			Assert.AreEqual(0, x.Readonly().Heroes.Count);
+		}
+
+		protected virtual void DatesPropertyTest(T ctr) {
+			var today = DateTime.Today;
+			var x = ctr.As<IDateConfig>();
+
+			x.Realtime().Date = DateTime.Now;
+
+			Assert.IsTrue(today < x.Readonly().Date);
+		}
+
+		protected virtual void DatesExPropertyTest(T ctr) {
+			var x = ctr.As<IDateConfigEx>();
+			x.Reset();
+
+			Assert.IsTrue(x.Copy().CreatedAt > DateTime.Today); // there hidden bug =)
+			x.Realtime().Date = DateTime.Now;
+
+			Assert.IsTrue(x.Readonly().CreatedAt < x.Readonly().Date);
 		}
 	}
 }

@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Diagnostics.SymbolStore;
+using System.Diagnostics;
 
 namespace ArtZilla.Config.Builders {
 	public static class PropertyChangedInvoker {
@@ -14,12 +16,12 @@ namespace ArtZilla.Config.Builders {
 	}
 
 	public class NotifyingConfigTypeBuilder<T>: CopyConfigTypeBuilder<T> where T : IConfiguration {
-		class NotifyingIListDefaultValueProvider : IDefaultValueProvider {
+		class NotifyingIListDefaultValueProvider: IDefaultValueProvider {
 			public NotifyingIListDefaultValueProvider(Type itemType) => _itemType = itemType;
 
 			public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
 				var type = typeof(ObservableCollection<>).MakeGenericType(_itemType);
-				var ctor = type.GetConstructor(Type.EmptyTypes); 
+				var ctor = type.GetConstructor(Type.EmptyTypes);
 				Debug.Assert(ctor != null, nameof(ctor) + " != null");
 
 				il.Emit(OpCodes.Ldarg_0);
@@ -37,7 +39,7 @@ namespace ArtZilla.Config.Builders {
 			base.AddInterfaces();
 		}
 
-		protected override IDefaultValueProvider GetIListDefaultValue(PropertyInfo pi) 
+		protected override IDefaultValueProvider GetIListDefaultValue(PropertyInfo pi)
 			=> new NotifyingIListDefaultValueProvider(pi.PropertyType.GetGenericArguments()[0]);
 
 		protected virtual void AddInpcImplementation() {
@@ -126,16 +128,25 @@ namespace ArtZilla.Config.Builders {
 		}
 
 		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
+			Debug.WriteLine($"NotifyingConfigTypeBuilder.ImplementPropertySetMethod {pi.Name} ({pi.PropertyType})");
+
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
 
 			var endOfMethod = il.DefineLabel();
 
-			// comparing property old and new value.
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldfld, fb);
 			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Ceq);
+
+			if (pi.PropertyType == typeof(DateTime)) {
+				var method = typeof(DateTime).GetMethod("op_Equality", new[] { typeof(DateTime), typeof(DateTime) });
+				Debug.Assert(method != null);
+
+				il.Emit(OpCodes.Call, method);
+			} else {
+				il.Emit(OpCodes.Ceq);
+			}
 
 			il.Emit(OpCodes.Brtrue_S, endOfMethod);
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
@@ -26,10 +27,7 @@ namespace ArtZilla.Config.Builders {
 		protected virtual IDefaultValueProvider GetIListDefaultValue(PropertyInfo pi)
 			=> new CopyIListDefaultValueProvider(pi.PropertyType.GetGenericArguments()[0]);
 
-		protected override void ImplementPropertyGetMethod(PropertyInfo pi,
-																											 PropertyBuilder pb,
-																											 MethodInfo mi,
-																											 MethodBuilder mb) {
+		protected override void ImplementPropertyGetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
 			il.Emit(OpCodes.Ldarg_0);
@@ -37,24 +35,24 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ret);
 		}
 
-		protected override void ImplementPropertySetMethod(PropertyInfo pi,
-																											 PropertyBuilder pb,
-																											 MethodInfo mi,
-																											 MethodBuilder mb) {
+		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
+			Debug.WriteLine($"CopyConfigTypeBuilder.ImplementPropertySetMethod {pi.Name} ({pi.PropertyType})");
+
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
+
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
 			il.Emit(OpCodes.Stfld, fb);
 			il.Emit(OpCodes.Ret);
 		}
-
+		
 		private class CopyIListDefaultValueProvider : IDefaultValueProvider {
 			public CopyIListDefaultValueProvider(Type itemType) => _itemType = itemType;
 
 			public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
 				var type = typeof(List<>).MakeGenericType(_itemType);
-				var ctor = type.GetConstructor(Type.EmptyTypes); 
+				var ctor = type.GetConstructor(Type.EmptyTypes);
 				il.Emit(OpCodes.Newobj, ctor);
 				il.Emit(OpCodes.Stfld, fb);
 			}

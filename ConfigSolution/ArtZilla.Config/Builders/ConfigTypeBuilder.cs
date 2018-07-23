@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -24,8 +25,11 @@ namespace ArtZilla.Config.Builders {
 
 		protected TypeBuilder Tb { get; set; }
 
+		protected ISymbolDocumentWriter Sdw { get; set; }
+
 		public virtual Type Create() {
 			Mb = CreateModuleBuilder();
+			//Sdw = CreateSymbolDocumentWriter();
 			Tb = CreateTypeBuilder();
 
 			AddInterfaces();
@@ -41,14 +45,55 @@ namespace ArtZilla.Config.Builders {
 
 		protected virtual ModuleBuilder CreateModuleBuilder() {
 			var an = new AssemblyName("gen_" + typeof(T).Name);
+#if DEBUG
+			const bool isDebug = true;
+#else
+			const bool isDebug = false;
+#endif
 #if NET40
 			var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
+			//MarkDebuggable(asm);
 			var moduleName = Path.ChangeExtension(an.Name, "dll");
-			return asm.DefineDynamicModule(moduleName, false);
-#else
+			return asm.DefineDynamicModule(moduleName, isDebug);
+#elif NET45
+			var asm = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+			//MarkDebuggable(asm);
+			var moduleName = Path.ChangeExtension(an.Name, "dll");
+			return asm.DefineDynamicModule(moduleName, isDebug);
+#elif NETSTANDARD
 			var asm = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
 			var moduleName = Path.ChangeExtension(an.Name, "dll");
 			return asm.DefineDynamicModule(moduleName);
+#endif
+		}
+
+		[Conditional("DEBUG")]
+		protected virtual void MarkDebuggable(AssemblyBuilder asm) {
+			Debug.WriteLine("MarkDebuggable()");
+
+			var daType = typeof(DebuggableAttribute);
+			var daCtor = daType.GetConstructor(new[] { typeof(DebuggableAttribute.DebuggingModes) });
+			Debug.Assert(daCtor != null, nameof(daCtor) + " != null");
+
+			var daBuilder = new CustomAttributeBuilder(daCtor, new object[] {
+				DebuggableAttribute.DebuggingModes.DisableOptimizations
+				| DebuggableAttribute.DebuggingModes.Default });
+
+			asm.SetCustomAttribute(daBuilder);
+		}
+
+		protected virtual ISymbolDocumentWriter CreateSymbolDocumentWriter() {
+#if DEBUG && !NETSTANDARD
+			return Mb.DefineDocument("Source.txt", Guid.Empty, Guid.Empty, Guid.Empty);
+#else
+			return default;
+#endif
+		}
+
+		[Conditional("DEBUG")]
+		protected virtual void MarkLine(ILGenerator il, int startLine, int startColumn, int? endLine = null, int endColumn = 120) {
+#if !NETSTANDARD
+			il.MarkSequencePoint(Sdw, startLine, startColumn, endLine ?? startLine, endColumn);
 #endif
 		}
 
@@ -122,6 +167,7 @@ namespace ArtZilla.Config.Builders {
 		protected virtual void AddDefaultConstructor() {
 			var ctor = Tb.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, Type.EmptyTypes);
 			var il = ctor.GetILGenerator();
+			DebugMessage(il, "Call of IConfiguration.Constructor");
 
 			foreach (var dv in _fieldValues)
 				dv.Attr.GenerateFieldCtorCode(il, dv.Fb);
@@ -132,6 +178,8 @@ namespace ArtZilla.Config.Builders {
 		protected virtual void AddCopyConstructor() {
 			var ctor = Tb.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, new[] { typeof(T) });
 			var il = ctor.GetILGenerator();
+
+			DebugMessage(il, "Call of IConfiguration.Copy");
 
 			foreach (var pi in typeof(T).GetProperties()) {
 				il.Emit(OpCodes.Ldarg_0);
@@ -183,7 +231,7 @@ namespace ArtZilla.Config.Builders {
 				mi.Name,
 				MethodAttributes.Public | MethodAttributes.Virtual,
 				typeof(void),
-				new Type[] { pi.PropertyType });
+				new[] { pi.PropertyType });
 
 			ImplementPropertySetMethod(pi, pb, mi, mb);
 
@@ -205,25 +253,35 @@ namespace ArtZilla.Config.Builders {
 		protected virtual void AddMethod(MethodInfo mi)
 			=> throw new BuildException("Can't implement method " + mi.Name);
 
-		protected virtual FieldBuilder CreateField(String name, Type type, FieldAttributes attr) {
+		protected virtual FieldBuilder CreateField(string name, Type type, FieldAttributes attr) {
 			var fb = Tb.DefineField(name, type, attr);
 			_fields.Add(fb);
 			return fb;
 		}
 
-		protected virtual FieldBuilder GetOrCreatePrivateField(String name, Type type)
+		protected virtual FieldBuilder GetOrCreatePrivateField(string name, Type type)
 			=> _fields.Find(f => f.Name == name)
 			?? CreateField(name, type, FieldAttributes.Private);
 
-		protected virtual FieldBuilder GetPrivateField(String name)
+		protected virtual FieldBuilder GetPrivateField(string name)
 			=> _fields.Find(f => f.Name == name)
 			?? throw new BuildException("Private field " + name + " not exist");
 
-		protected virtual String GetFieldName(PropertyInfo pi)
+		protected virtual string GetFieldName(PropertyInfo pi)
 			=> "_" + pi.Name;
 
 		protected virtual void AddDefaultFieldValue(FieldBuilder fb, IDefaultValueProvider attr)
 			=> _fieldValues.Add((fb, attr));
+
+		[Conditional("DEBUG")]
+		protected void DebugMessage(ILGenerator il, string line) {
+			il.Emit(OpCodes.Ldstr, line);
+			var method = typeof(Debug).GetMethod(nameof(Debug.WriteLine), new[] { typeof(string) });
+			Debug.Assert(method != null, "Debug.WriteLine not found");
+
+			il.Emit(OpCodes.Call, method);
+			il.Emit(OpCodes.Nop);
+		}
 
 		private readonly List<FieldBuilder> _fields = new List<FieldBuilder>();
 		private readonly List<MethodBuilder> _propMethods = new List<MethodBuilder>();
