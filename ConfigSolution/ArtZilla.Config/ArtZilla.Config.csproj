@@ -1,70 +1,71 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TargetFrameworks>net40;net45;netstandard2.0</TargetFrameworks>
-    <RuntimeIdentifiers>win7-x86;win7-x64</RuntimeIdentifiers>
-    <Authors>ArtZilla</Authors>
-    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
-    <ProjectGuid>{F0272B4C-10AE-4BD1-8B65-09ABEABFAA90}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <LangVersion>latest</LangVersion>
-    <WarningLevel>4</WarningLevel>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <Language>en-US</Language>
-    <NeutralLanguage>en-US</NeutralLanguage>
-    <PackageId>ArtZilla.Config</PackageId>
-    <AssemblyName>ArtZilla.Config</AssemblyName>
-    <RootNamespace>ArtZilla.Config</RootNamespace>
-    <AssemblyTitle>Configuration Framework</AssemblyTitle>
-    <Description>Configuration Framework</Description>
-    <Summary>Configuration Framework</Summary>
-    <PackageCopyright>Copyright (c) 2017-2018 Artyom Fomin</PackageCopyright>
-    <PackageTags>ArtZilla, .Net, Configuration Framework</PackageTags>
-    <PackageIconUrl>https://artzilla.name/ArtZilla.Config/Icon.png</PackageIconUrl>
-    <PackageProjectUrl>https://artzilla.name/ArtZilla.Config/</PackageProjectUrl>
-    <PackageLicenseUrl>https://artzilla.name/ArtZilla.Config/License.txt</PackageLicenseUrl>
-    <Copyright>Copyright (c) 2017-2018 Artyom Fomin</Copyright>
-    <RepositoryType>Github</RepositoryType>
-    <Company>ArtZilla's development</Company>
-    <Version>0.1.2.18</Version>
-    <FileVersion>0.1.2.18</FileVersion>
-    <AssemblyVersion>0.1.2.18</AssemblyVersion>
-    <RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <!-- Common -->
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.16" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
-  </ItemGroup>
-  <!-- NET Standard 2.0 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
-  <!-- NET Framework 4.5 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
-    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
-    <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
-  </PropertyGroup>
-  <!-- NET Framework 4.0 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40'">
-    <!-- No packages -->
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
-    <DefineConstants>$(DefineConstants);NET40;NETFULL</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net40;net45;netstandard2.0</TargetFrameworks>
+		<RuntimeIdentifiers>win7-x86;win7-x64</RuntimeIdentifiers>
+		<Authors>ArtZilla</Authors>
+		<RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+		<ProjectGuid>{F0272B4C-10AE-4BD1-8B65-09ABEABFAA90}</ProjectGuid>
+		<OutputType>Library</OutputType>
+		<LangVersion>latest</LangVersion>
+		<WarningLevel>4</WarningLevel>
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+		<Language>en-US</Language>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<PackageId>ArtZilla.Config</PackageId>
+		<AssemblyName>ArtZilla.Config</AssemblyName>
+		<RootNamespace>ArtZilla.Config</RootNamespace>
+		<AssemblyTitle>Configuration Framework</AssemblyTitle>
+		<Description>Configuration Framework</Description>
+		<Summary>Configuration Framework</Summary>
+		<PackageCopyright>Copyright (c) 2017-2018 Artyom Fomin</PackageCopyright>
+		<PackageTags>ArtZilla, .Net, Configuration Framework</PackageTags>
+		<PackageIconUrl>https://artzilla.name/ArtZilla.Config/Icon.png</PackageIconUrl>
+		<PackageProjectUrl>https://artzilla.name/ArtZilla.Config/</PackageProjectUrl>
+		<PackageLicenseUrl>https://artzilla.name/ArtZilla.Config/License.txt</PackageLicenseUrl>
+		<Copyright>Copyright (c) 2017-2018 Artyom Fomin</Copyright>
+		<RepositoryType>Github</RepositoryType>
+		<Company>ArtZilla's development</Company>
+		<Version>0.1.2.19</Version>
+		<FileVersion>0.1.2.19</FileVersion>
+		<AssemblyVersion>0.1.2.19</AssemblyVersion>
+		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
+		<IncludeSymbols>false</IncludeSymbols>
+		<IncludeSource>false</IncludeSource>
+		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<!-- Common -->
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.0.16" />
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+	</ItemGroup>
+	<!-- NET Standard 2.0 -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+	</ItemGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+	<!-- NET Framework 4.5 -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+	</ItemGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
+		<DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
+	</PropertyGroup>
+	<!-- NET Framework 4.0 -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net40'">
+		<!-- No packages -->
+	</ItemGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
+		<DefineConstants>$(DefineConstants);NET40;NETFULL</DefineConstants>
+	</PropertyGroup>
 </Project>
