@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -159,7 +160,7 @@ namespace ArtZilla.Config {
 			il.Emit(OpCodes.Newobj, Ctor);
 			il.Emit(OpCodes.Stfld, fb);
 
-			/*
+			/* il example
 			  IL_0089: ldarg.0      // this
 				IL_008a: ldstr        "{D1F71EC6-76A6-40F8-8910-68E67D753CD4}"
 				IL_008f: newobj       instance void [mscorlib]System.Guid::.ctor(string)
@@ -187,7 +188,25 @@ namespace ArtZilla.Config {
 		}
 
 		public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
-			throw new NotImplementedException("Maybe later...");
+			il.Emit(OpCodes.Ldarg_0);
+			foreach (var arg in Args)
+				DefaultValueAttribute.PushObject(il, arg);
+
+			var method = Type.GetMethod(MethodName, BindingFlags.Public | BindingFlags.Static); // todo: find with args
+			Debug.Assert(method != null);
+			il.Emit(OpCodes.Call, method);
+			il.Emit(OpCodes.Stfld, fb);
+
+			/* il example
+			 	IL_0000: ldarg.0
+				IL_0001: call valuetype [mscorlib]System.Guid [mscorlib]System.Guid::NewGuid()
+				IL_0006: stfld valuetype [mscorlib]System.Guid ArtZilla.Config.Tests.Class1::_guid
+				IL_000b: ldarg.0
+				IL_000c: call instance void [mscorlib]System.Object::.ctor()
+				IL_0011: nop
+				IL_0012: ret
+			 
+			 */
 		}
 	}
 }

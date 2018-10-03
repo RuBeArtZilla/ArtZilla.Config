@@ -84,7 +84,12 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 	}
 
 	public interface IDateConfigEx : IDateConfig {
-		[DefaultValueByMethod(typeof(DateTime), nameof(DateTime.Now))]
+		// [DefaultValueByMethod(typeof(DateTime), nameof(DateTime.Now))]
 		DateTime CreatedAt { get; set; }
+	}
+
+	public interface IGuidConfig : IConfiguration {
+		[DefaultValueByMethod(typeof(Guid), nameof(Guid.NewGuid))]
+		Guid Guid { get; set; }
 	}
 }

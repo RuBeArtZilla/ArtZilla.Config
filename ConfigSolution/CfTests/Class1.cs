@@ -18,6 +18,8 @@ namespace ArtZilla.Config.Tests {
 
 		private void OnProperty(string v) => throw new NotImplementedException();
 
+		private Guid _guid = Guid.NewGuid();
+
 		private int _value;
 	}
 }
