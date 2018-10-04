@@ -144,10 +144,11 @@ namespace ArtZilla.Config.Builders {
 				nameof(IConfiguration.Copy),
 				MethodAttributes.Public | MethodAttributes.Virtual,
 				typeof(void),
-				new Type[] { typeof(IConfiguration) });
+				new[] { typeof(IConfiguration) });
 
 			var il = mb.GetILGenerator();
-			foreach (var pi in typeof(T).GetProperties()) {
+			foreach (var pi in Tb.GetInterfaces().SelectMany(t => t.GetProperties())) {
+				Debug.Print(GetType().Name + "." + nameof(IConfiguration.Copy) + " impl " + pi.Name);
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
 
@@ -181,7 +182,8 @@ namespace ArtZilla.Config.Builders {
 
 			DebugMessage(il, "Call of IConfiguration.Copy");
 
-			foreach (var pi in typeof(T).GetProperties()) {
+			foreach (var pi in Tb.GetInterfaces().SelectMany(t => t.GetProperties())) {
+				DebugMessage(il, "Copy " + pi.Name + " property");
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Castclass, typeof(T));
@@ -270,8 +272,10 @@ namespace ArtZilla.Config.Builders {
 		protected virtual string GetFieldName(PropertyInfo pi)
 			=> "_" + pi.Name;
 
-		protected virtual void AddDefaultFieldValue(FieldBuilder fb, IDefaultValueProvider attr)
-			=> _fieldValues.Add((fb, attr));
+		protected virtual void AddDefaultFieldValue(FieldBuilder fb, IDefaultValueProvider attr) {
+			_fieldValues.Add((fb, attr));
+			Debug.Print(GetType().Name +" for field " + fb.Name + " has default value " + attr);
+		}
 
 		[Conditional("DEBUG")]
 		protected void DebugMessage(ILGenerator il, string line) {

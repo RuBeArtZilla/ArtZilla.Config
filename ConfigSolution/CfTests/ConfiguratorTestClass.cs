@@ -65,6 +65,9 @@ namespace CfTests {
 		[TestMethod]
 		public void StructTest() => RunAll(StructTest);
 
+		[TestMethod]
+		public void InheritanceTest() => RunAll(InheritanceTest);
+
 		protected virtual void KeysExistTest(T ctr) {
 			var cfr = ctr.As<int, ITestConfiguration>();
 			cfr.Reset(0);
@@ -251,6 +254,14 @@ namespace CfTests {
 			Assert.AreEqual(waifu, x.Readonly().Waifu);
 			x.Realtime().Waifu = new ShoujoState(Girls.Madoka);
 			Assert.AreNotEqual(waifu, x.Readonly().Waifu);
+		}
+
+		protected virtual void InheritanceTest(T ctr) {
+			var x = ctr.As<IDerivedConfig>();
+			x.Reset();
+			Assert.AreEqual(true, x.Readonly().IsEnabled, "wrong default value");
+			x.Realtime().IsEnabled = false;
+			Assert.AreEqual(false, x.Readonly().IsEnabled, "wrong new value");
 		}
 	}
 }

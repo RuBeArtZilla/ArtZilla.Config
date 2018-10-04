@@ -117,4 +117,13 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 		[DefaultValueByCtor(typeof(ShoujoState), Girls.Homura, true)]
 		ShoujoState Waifu { get; set; }
 	}
+
+	public interface IBaseConfig : IConfiguration {
+		[DefaultValue(true)]
+		bool IsEnabled { get; set; }
+	}
+
+	public interface IDerivedConfig : IBaseConfig {
+		int MagicNumber { get ; set; }
+	}
 }

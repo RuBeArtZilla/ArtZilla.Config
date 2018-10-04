@@ -207,7 +207,7 @@ namespace ArtZilla.Config.Configurators {
 			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get(key));
 
 		public virtual TConfiguration Readonly(TKey key)
-			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get(key));
+			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get(key));
 
 		public virtual TConfiguration Realtime(TKey key)
 			=> Get(key);

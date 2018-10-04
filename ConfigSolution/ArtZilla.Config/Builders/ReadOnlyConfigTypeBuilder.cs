@@ -19,7 +19,6 @@ namespace ArtZilla.Config.Builders {
 
 			// using this field to store property values
 			var fb = GetOrCreatePrivateField(GetFieldName(pi), type);
-
 			var dv = pi.GetCustomAttributes(true).OfType<IDefaultValueProvider>().FirstOrDefault();
 			if (dv != null)
 				AddDefaultFieldValue(fb, dv);
@@ -32,9 +31,9 @@ namespace ArtZilla.Config.Builders {
 		private IDefaultValueProvider GetIListDefaultValue(PropertyInfo pi)
 			=> new ReadonlyIListDefaultValueProvider(pi.PropertyType.GetGenericArguments()[0]);
 
-		protected override void ImplementPropertyGetMethod(PropertyInfo pi, 
-			                                                 PropertyBuilder pb, 
-																											 MethodInfo mi, 
+		protected override void ImplementPropertyGetMethod(PropertyInfo pi,
+			                                                 PropertyBuilder pb,
+																											 MethodInfo mi,
 																											 MethodBuilder mb) {
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
@@ -43,9 +42,9 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ret);
 		}
 
-		protected override void ImplementPropertySetMethod(PropertyInfo pi, 
-			                                                 PropertyBuilder pb, 
-																											 MethodInfo mi, 
+		protected override void ImplementPropertySetMethod(PropertyInfo pi,
+			                                                 PropertyBuilder pb,
+																											 MethodInfo mi,
 																											 MethodBuilder mb) {
 			var fb = GetPrivateField(GetFieldName(pi));
 			var il = mb.GetILGenerator();
@@ -60,7 +59,7 @@ namespace ArtZilla.Config.Builders {
 
 			public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
 				var type = typeof(List<>).MakeGenericType(_itemType);
-				var ctor = type.GetConstructor(Type.EmptyTypes); 
+				var ctor = type.GetConstructor(Type.EmptyTypes);
 				il.Emit(OpCodes.Newobj, ctor);
 				il.Emit(OpCodes.Stfld, fb);
 			}
