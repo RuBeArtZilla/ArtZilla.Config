@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace ArtZilla.Config.Tests.TestConfigurations {
 	public interface IComplexConfig : IConfiguration {
@@ -91,5 +92,29 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 	public interface IGuidConfig : IConfiguration {
 		[DefaultValueByMethod(typeof(Guid), nameof(Guid.NewGuid))]
 		Guid Guid { get; set; }
+	}
+
+	[Serializable]
+	public struct ShoujoState : IEquatable<ShoujoState> {
+		[XmlAttribute]
+		public bool IsAlive;
+
+		[XmlAttribute]
+		public Girls Shoujo;
+
+		public ShoujoState(Girls shoujo, bool isAlive = false) {
+			IsAlive = isAlive;
+			Shoujo = shoujo;
+		}
+
+		public override bool Equals(object obj) => obj is ShoujoState && Equals((ShoujoState)obj);
+		public bool Equals(ShoujoState other) => IsAlive == other.IsAlive && Shoujo == other.Shoujo;
+		public static bool operator ==(ShoujoState state1, ShoujoState state2) => state1.Equals(state2);
+		public static bool operator !=(ShoujoState state1, ShoujoState state2) => !(state1 == state2);
+	}
+
+	public interface IStructConfig : IConfiguration {
+		[DefaultValueByCtor(typeof(ShoujoState), Girls.Homura, true)]
+		ShoujoState Waifu { get; set; }
 	}
 }

@@ -141,11 +141,18 @@ namespace ArtZilla.Config.Builders {
 
 			var type = pi.PropertyType;
 			if (IsEqualityType(type)) {
+				Debug.WriteLine($"{type} is equality type");
+
 				var method = type.GetMethod("op_Equality", new[] { type, type });
 				Debug.Assert(method != null);
 
 				il.Emit(OpCodes.Call, method);
 			} else {
+				Debug.WriteLine($"{type} is not equality type");
+				// for user defined struct should exist operator ==
+				if (type.IsValueType && !type.IsPrimitive && !type.IsEnum)
+					throw new Exception($"Type {type} of property {pi.Name} has no operator ==");
+
 				il.Emit(OpCodes.Ceq);
 			}
 

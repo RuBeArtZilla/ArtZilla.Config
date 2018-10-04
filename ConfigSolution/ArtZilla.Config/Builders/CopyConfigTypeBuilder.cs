@@ -46,7 +46,7 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Stfld, fb);
 			il.Emit(OpCodes.Ret);
 		}
-		
+
 		private class CopyIListDefaultValueProvider : IDefaultValueProvider {
 			public CopyIListDefaultValueProvider(Type itemType) => _itemType = itemType;
 
