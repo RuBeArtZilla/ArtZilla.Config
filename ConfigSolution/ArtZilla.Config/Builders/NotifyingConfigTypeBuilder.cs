@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Diagnostics.SymbolStore;
-using System.Diagnostics;
 
 namespace ArtZilla.Config.Builders {
 	public static class PropertyChangedInvoker {
@@ -16,29 +12,13 @@ namespace ArtZilla.Config.Builders {
 	}
 
 	public class NotifyingConfigTypeBuilder<T>: CopyConfigTypeBuilder<T> where T : IConfiguration {
-		class NotifyingIListDefaultValueProvider: IDefaultValueProvider {
-			public NotifyingIListDefaultValueProvider(Type itemType) => _itemType = itemType;
-
-			public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
-				var type = typeof(ObservableCollection<>).MakeGenericType(_itemType);
-				var ctor = type.GetConstructor(Type.EmptyTypes);
-				Debug.Assert(ctor != null, nameof(ctor) + " != null");
-
-				il.Emit(OpCodes.Ldarg_0);
-				il.Emit(OpCodes.Newobj, ctor);
-				il.Emit(OpCodes.Stfld, fb);
-			}
-
-			private readonly Type _itemType;
-		}
-
 		protected override string ClassPrefix => "Notifying";
 
 		protected override void AddInterfaces() {
 			AddInpcImplementation();
 			base.AddInterfaces();
 		}
-
+		
 		protected override IDefaultValueProvider GetIListDefaultValue(PropertyInfo pi)
 			=> new NotifyingIListDefaultValueProvider(pi.PropertyType.GetGenericArguments()[0]);
 
@@ -110,7 +90,7 @@ namespace ArtZilla.Config.Builders {
 			{
 				var methodBuilder = Tb.DefineMethod("OnPropertyChanged",
 					MethodAttributes.Family | MethodAttributes.Virtual | MethodAttributes.HideBySig |
-					MethodAttributes.NewSlot, CallingConventions.Standard | CallingConventions.HasThis, typeof(void),
+					MethodAttributes.NewSlot, CallingConventions.HasThis, typeof(void),
 					new[] { typeof(string) });
 				var generator = methodBuilder.GetILGenerator();
 				var returnLabel = generator.DefineLabel();
@@ -127,31 +107,28 @@ namespace ArtZilla.Config.Builders {
 			}
 		}
 
-		protected override void ImplementPropertySetMethod(PropertyInfo pi, PropertyBuilder pb, MethodInfo mi, MethodBuilder mb) {
-			Debug.WriteLine($"NotifyingConfigTypeBuilder.ImplementPropertySetMethod {pi.Name} ({pi.PropertyType})");
-
-			var fb = GetPrivateField(GetFieldName(pi));
+		protected override void ImplementSimplePropertySetMethod(in SimplePropertyBuilder spb, MethodInfo mi, MethodBuilder mb) {
 			var il = mb.GetILGenerator();
+			il.Print("Call " + ClassName + "." + mb.Name);
 
 			var endOfMethod = il.DefineLabel();
 
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, fb);
+			il.Emit(OpCodes.Ldfld, spb.Fb);
 			il.Emit(OpCodes.Ldarg_1);
 
-			var type = pi.PropertyType;
-			if (IsEqualityType(type)) {
-				Debug.WriteLine($"{type} is equality type");
+			if (IsEqualityType(spb.Type)) {
+				Debug.WriteLine($"{spb.Type} is equality type");
 
-				var method = type.GetMethod("op_Equality", new[] { type, type });
+				var method = spb.Type.GetMethod("op_Equality", new[] { spb.Type, spb.Type });
 				Debug.Assert(method != null);
 
 				il.Emit(OpCodes.Call, method);
 			} else {
-				Debug.WriteLine($"{type} is not equality type");
+				Debug.WriteLine($"{spb.Type} is not equality type");
 				// for user defined struct should exist operator ==
-				if (type.IsValueType && !type.IsPrimitive && !type.IsEnum)
-					throw new Exception($"Type {type} of property {pi.Name} has no operator ==");
+				if (spb.Type.IsValueType && !spb.Type.IsPrimitive && !spb.Type.IsEnum)
+					throw new Exception($"Type {spb.Type} of property {spb.Pi.Name} has no operator ==");
 
 				il.Emit(OpCodes.Ceq);
 			}
@@ -161,10 +138,10 @@ namespace ArtZilla.Config.Builders {
 			// some code if they are not equal
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldarg_1);
-			il.Emit(OpCodes.Stfld, fb);
+			il.Emit(OpCodes.Stfld, spb.Fb);
 
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldstr, pi.Name);
+			il.Emit(OpCodes.Ldstr, spb.Pi.Name);
 			il.Emit(OpCodes.Call, _onPropertyChangedMethod);
 
 			// this marks the return point
@@ -172,10 +149,26 @@ namespace ArtZilla.Config.Builders {
 			il.Emit(OpCodes.Ret);
 		}
 
-		private bool IsEqualityType(Type type) {
-			return type.GetMethod("op_Equality", new[] { type, type }) != null;
-		}
+		private bool IsEqualityType(Type type) => type.GetMethod("op_Equality", new[] { type, type }) != null;
 
 		protected MethodInfo _onPropertyChangedMethod;
+
+		private class NotifyingIListDefaultValueProvider : IDefaultValueProvider {
+			public NotifyingIListDefaultValueProvider(Type itemType) => _itemType = itemType;
+
+			public void GenerateFieldCtorCode(ILGenerator il, FieldBuilder fb) {
+				var type = typeof(ObservableCollection<>).MakeGenericType(_itemType);
+				var ctor = type.GetConstructor(Type.EmptyTypes);
+				Debug.Assert(ctor != null, nameof(ctor) + " != null");
+
+				il.Emit(OpCodes.Ldarg_0);
+				il.Emit(OpCodes.Newobj, ctor);
+				il.Emit(OpCodes.Stfld, fb);
+			}
+
+			public override string ToString() => "ObservableCollection<" + typeof(T).Name + ">";
+
+			private readonly Type _itemType;
+		}
 	}
 }

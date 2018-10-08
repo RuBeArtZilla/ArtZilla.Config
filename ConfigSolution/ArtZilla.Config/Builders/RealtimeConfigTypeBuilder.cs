@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-
-namespace ArtZilla.Config.Builders {
+﻿namespace ArtZilla.Config.Builders {
 	public class RealtimeConfigTypeBuilder<T>: NotifyingConfigTypeBuilder<T> where T : IConfiguration {
 		protected override string ClassPrefix => "Realtime";
 
@@ -12,8 +7,6 @@ namespace ArtZilla.Config.Builders {
 			base.AddInterfaces();
 		}
 
-		protected virtual void AddRealtimeImplementation() {
-			Tb.AddInterfaceImplementation(typeof(IRealtimeConfiguration));
-		}
+		protected virtual void AddRealtimeImplementation() => Tb.AddInterfaceImplementation(typeof(IRealtimeConfiguration));
 	}
 }

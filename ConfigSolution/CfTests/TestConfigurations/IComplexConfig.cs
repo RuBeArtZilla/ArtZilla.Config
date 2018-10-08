@@ -9,11 +9,7 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 		List<int> ValueList { get; set; }
 		Dictionary<int, string> ValueDictionary { get; set; }
 	}
-
-	public interface IMediaLibraryConfiguration : IConfiguration {
-		List<string> Paths { get; }
-	}
-
+	
 	public enum Girls : long {
 		Madoka = 0,
 		Homura = 1,

@@ -1,4 +1,5 @@
 ﻿using System;
+using ArtZilla.Config.Builders;
 
 namespace ArtZilla.Config.Extensions {
 	public static class ConfigurationExtensions {

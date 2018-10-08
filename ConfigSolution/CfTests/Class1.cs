@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using ArtZilla.Config.Tests.TestConfigurations;
 
 namespace ArtZilla.Config.Tests {
@@ -18,11 +21,20 @@ namespace ArtZilla.Config.Tests {
 		}
 
 		private void Copy(Class1 x) {
+			if (ReferenceEquals(x, null)) throw new ArgumentNullException(nameof(x));
+			if (ReferenceEquals(this, x)) return;
+
 			Waifu = x.Waifu;
 			_guid = x._guid;
+			Items = x.Items;
 		}
 
-		private void OnProperty(string v) => throw new NotImplementedException();
+		private void Testst() {
+			Items = new ObservableCollection<Hero>();
+		}
+
+		private void OnProperty(string v) 
+			=> throw new NotImplementedException();
 
 		private Guid _guid = Guid.NewGuid();
 
@@ -36,7 +48,30 @@ namespace ArtZilla.Config.Tests {
 			}
 		} 
 
+		[XmlIgnore]
+		public IList<Hero> Items {
+			get => _items;
+			set {
+				_items.Clear();
+				Debug.WriteLine(value.Count);
+
+				var c = value.Count;
+				Debug.WriteLine(c.ToString());
+
+				for (var i = 0; i < c; ++i) {
+					_items.Add(value[i]);
+				}
+			}
+		}
+
+		[XmlArray("Items")]
+		public Hero[] ItemsArray {
+			get => Items.ToArray();
+			set => Items = value;
+		}
+
 		private int _value;
 		private ShoujoState _waifu = new ShoujoState(Girls.Homura, true);
+		private ObservableCollection<Hero> _items;
 	}
 }

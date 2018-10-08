@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ArtZilla.Config;
 using ArtZilla.Config.Tests.TestConfigurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -202,23 +203,35 @@ namespace CfTests {
 		}
 
 		protected virtual void ListsPropertyTest(T ctr) {
-			var x = ctr.As<IListConfiguration>();
-			x.Reset();
+			var a = ctr.As<IListConfiguration>();
+			var x = a.Copy();
+			Debug.WriteLine("Loaded: " + x.Heroes.Count);
+			// a.Reset();
 
-			Assert.IsNotNull(x.Copy().Heroes);
-			Assert.IsNotNull(x.Realtime().Heroes);
-			Assert.IsNotNull(x.Readonly().Heroes);
-			Assert.IsNotNull(x.Notifying().Heroes);
+			Assert.IsNotNull(a.Copy().Heroes);
+			Assert.IsNotNull(a.Realtime().Heroes);
+			Assert.IsNotNull(a.Readonly().Heroes);
+			Assert.IsNotNull(a.Notifying().Heroes);
+			
+			// Debug.WriteLine("Type of collection: " + x.Heroes.GetType());
+			x.Heroes.Clear();
+			x.Heroes.Add(new Hero("Midoria"));
+			x.Heroes.Add(new Hero("Saitama", 8999));
+			x.Heroes.Add(new Hero("Homura", 9001));
 
-			x.Realtime().Heroes.Add(new Hero("Midoria"));
-			x.Realtime().Heroes.Add(new Hero("Saitama", 8999));
-			x.Realtime().Heroes.Add(new Hero("Homura", 9001));
+			x.Names.Clear();
+			x.Names.Add("Midoria");
+			x.Names.Add("Saitama");
+			x.Names.Add("Homura");
 
-			Assert.AreEqual(3, x.Readonly().Heroes.Count);
-			Assert.AreEqual(9001, x.Notifying().Heroes[2].Power);
+			ctr.Save(x);
+			
+			var z = ctr.As<IListConfiguration>().Copy();
 
-			x.Reset();
-			Assert.AreEqual(0, x.Readonly().Heroes.Count);
+			Assert.AreEqual(3, z.Heroes.Count);
+			Assert.AreEqual(3, z.Heroes.Count);
+			Assert.AreEqual(9001, z.Heroes[2].Power);
+			Assert.AreEqual(3, z.Names.Count);
 		}
 
 		protected virtual void DatesPropertyTest(T ctr) {

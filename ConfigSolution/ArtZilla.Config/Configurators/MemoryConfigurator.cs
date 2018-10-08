@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using ArtZilla.Config.Builders;
 
 namespace ArtZilla.Config.Configurators {
 	public class MemoryConfigurator: IConfigurator {
@@ -73,7 +74,7 @@ namespace ArtZilla.Config.Configurators {
 
 		public IConfigurator<TConfiguration> As<TConfiguration>()
 			where TConfiguration : IConfiguration
-			=> (IConfigurator<TConfiguration>)_dict.GetOrAdd(typeof(TConfiguration), CreateTypedConfigurator<TConfiguration>());
+			=> (IConfigurator<TConfiguration>) _dict.GetOrAdd(typeof(TConfiguration), CreateTypedConfigurator<TConfiguration>());
 
 		public IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>()
 			where TConfiguration : IConfiguration

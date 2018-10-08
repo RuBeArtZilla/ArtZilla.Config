@@ -6,5 +6,6 @@ using System.Collections.ObjectModel;
 namespace ArtZilla.Config.Tests.TestConfigurations {
 	public interface IListConfiguration: IConfiguration {
 		IList<Hero> Heroes { get; set; }
+		IList<string> Names { get; set; }
 	}
 }
