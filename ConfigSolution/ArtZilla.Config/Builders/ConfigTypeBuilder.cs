@@ -75,9 +75,9 @@ namespace ArtZilla.Config.Builders {
 
 			Debug.WriteLine("Creating type for " + ClassName);
 
-#if NET40
+#if NET40 
 			return Tb.CreateType();
-#elif NET45 || NETSTANDARD
+#else
 			var ti = Tb.CreateTypeInfo();
 			return ti.AsType();
 #endif
@@ -93,7 +93,7 @@ namespace ArtZilla.Config.Builders {
 #if NET40
 			var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
 			return asm.DefineDynamicModule(moduleName, false);
-#elif NET45 || NETSTANDARD
+#else
 			var asm = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
 			return asm.DefineDynamicModule(moduleName);
 #endif

@@ -24,7 +24,7 @@ namespace ArtZilla.Config {
 			SetDefaultConfigurator<TConfigurator>();
 		}
 
-		public static void SetDefaultConfigurator<TConfigurator>() where TConfigurator : class, IConfigurator, new() 
+		public static void SetDefaultConfigurator<TConfigurator>() where TConfigurator : class, IConfigurator, new()
 			=> SetDefaultConfigurator(typeof(TConfigurator));
 
 		public static void SetDefaultConfigurator(Type tconfigurator) {
@@ -43,27 +43,27 @@ namespace ArtZilla.Config {
 			=> _ctor ?? (_ctor = _configurator.GetConstructor(Type.EmptyTypes));
 
 		public static IConfigurator<TConfiguration> As<TConfiguration>()
-			where TConfiguration : IConfiguration
+			where TConfiguration : class, IConfiguration
 			=> GetDefaultConfigurator().As<TConfiguration>();
 
 		public static IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>()
-			where TConfiguration : IConfiguration
+			where TConfiguration : class, IConfiguration
 			=> GetDefaultConfigurator().As<TKey, TConfiguration>();
 
 		public static TConfiguration Copy<TConfiguration>()
-			where TConfiguration : IConfiguration
+			where TConfiguration : class, IConfiguration
 			=> GetDefaultConfigurator().Copy<TConfiguration>();
 
 		public static TConfiguration Notifying<TConfiguration>()
-			where TConfiguration : IConfiguration
+			where TConfiguration : class, IConfiguration
 			=> GetDefaultConfigurator().Notifying<TConfiguration>();
 
 		public static TConfiguration Readonly<TConfiguration>()
-			where TConfiguration : IConfiguration
+			where TConfiguration : class, IConfiguration
 			=> GetDefaultConfigurator().Readonly<TConfiguration>();
 
 		public static TConfiguration Realtime<TConfiguration>()
-			where TConfiguration : IConfiguration
+			where TConfiguration : class, IConfiguration
 			=> GetDefaultConfigurator().Realtime<TConfiguration>();
 
 		private static IConfigurator _instance;

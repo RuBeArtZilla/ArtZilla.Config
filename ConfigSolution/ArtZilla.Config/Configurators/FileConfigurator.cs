@@ -11,7 +11,7 @@
 
 	public sealed class FileConfigurator<TConfiguration>
 		: LazyConfigurator<TConfiguration>
-		where TConfiguration : IConfiguration {
+		where TConfiguration : class,  IConfiguration {
 		public FileConfigurator() : this(new FileThread()) { }
 		public FileConfigurator(string appName) : this(new FileThread(appName)) { }
 		public FileConfigurator(string appName, string companyName) : this(new FileThread(appName, companyName)) { }
@@ -23,7 +23,7 @@
 
 	public sealed class FileConfigurator<TKey, TConfiguration>
 		: LazyConfigurator<TKey, TConfiguration>
-		where TConfiguration : IConfiguration {
+		where TConfiguration : class, IConfiguration {
 		public FileConfigurator() : this(new FileThread()) { }
 		public FileConfigurator(string appName) : this(new FileThread(appName)) { }
 		public FileConfigurator(string appName, string companyName) : this(new FileThread(appName, companyName)) { }

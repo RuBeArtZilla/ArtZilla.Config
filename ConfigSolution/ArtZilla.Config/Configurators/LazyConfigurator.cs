@@ -14,7 +14,7 @@ namespace ArtZilla.Config.Configurators {
 	}
 
 
-	public class LazyConfigurator<TConfiguration>: MemoryConfigurator<TConfiguration> where TConfiguration : IConfiguration {
+	public class LazyConfigurator<TConfiguration>: MemoryConfigurator<TConfiguration> where TConfiguration : class, IConfiguration {
 		public LazyConfigurator(IIoThread thread) => Io = thread ?? throw new ArgumentNullException(nameof(thread));
 
 		public void Flush() => Io.Flush();
@@ -65,8 +65,8 @@ namespace ArtZilla.Config.Configurators {
 		protected readonly IIoThread Io;
 	}
 
-	public class LazyConfigurator<TKey, TConfiguration> 
-		: MemoryConfigurator<TKey, TConfiguration> where TConfiguration : IConfiguration {
+	public class LazyConfigurator<TKey, TConfiguration>
+		: MemoryConfigurator<TKey, TConfiguration> where TConfiguration : class, IConfiguration {
 		public LazyConfigurator(IIoThread thread)
 			=> Io = thread ?? throw new ArgumentNullException(nameof(thread));
 

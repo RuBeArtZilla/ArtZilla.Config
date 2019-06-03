@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace ArtZilla.Config.Configurators {
@@ -28,7 +29,7 @@ namespace ArtZilla.Config.Configurators {
 
 	public class DarkSerializer {
 		public DarkSerializer(Type type) {
-			
+
 		}
 
 		public object Deserialize(Stream stream) {
@@ -37,6 +38,35 @@ namespace ArtZilla.Config.Configurators {
 
 		public void Serialize(Stream stream, object obj) {
 			throw new NotImplementedException();
-		}		
+		}
+	}
+
+	public class UselessXmlSerializer {
+		public UselessXmlSerializer(Type type) {
+			_type = type;
+		}
+
+		public XDocument Serialize(object o) {
+			var xml = new XDocument();
+
+			return xml;
+		}
+
+		public void Deserialize(XDocument xml, object o) {
+
+		}
+
+		public object Deserialize(XDocument xml) {
+			var result = Activator.CreateInstance(_type);
+
+			throw new NotImplementedException();
+		}
+
+		class SerPart {
+			public string Name;
+
+		}
+
+		private readonly Type _type;
 	}
 }

@@ -3,56 +3,73 @@
 namespace ArtZilla.Config {
 	public interface IConfigurator {
 		/// <summary>
+		///	Remove all <see cref="IConfiguration"/> from this instance
+		/// </summary>
+		void Clear();
+
+		/// <summary>
 		/// Save <paramref name="value"/> as <typeparamref name="TConfiguration"/>
 		/// </summary>
 		/// <typeparam name="TConfiguration"></typeparam>
 		/// <param name="value"></param>
-		void Save<TConfiguration>(TConfiguration value) where TConfiguration : IConfiguration;
+		void Save<TConfiguration>(TConfiguration value) where TConfiguration : class, IConfiguration;
 
 		/// <summary>
 		/// Reset <typeparamref name="TConfiguration"/> to default values
 		/// </summary>
 		/// <typeparam name="TConfiguration"></typeparam>
-		void Reset<TConfiguration>() where TConfiguration : IConfiguration;
+		void Reset<TConfiguration>() where TConfiguration : class, IConfiguration;
 
-		bool IsExist<TConfiguration>() where TConfiguration : IConfiguration;
+		bool IsExist<TConfiguration>() where TConfiguration : class, IConfiguration;
 
 		/// <summary>
 		/// return a copy of actual <typeparamref name="TConfiguration"/>
 		/// </summary>
 		/// <typeparam name="TConfiguration"></typeparam>
 		/// <returns></returns>
-		TConfiguration Copy<TConfiguration>() where TConfiguration : IConfiguration;
+		TConfiguration Copy<TConfiguration>() where TConfiguration : class, IConfiguration;
 
 		/// <summary>
 		/// Method return a copy of actual <typeparamref name="TConfiguration"/> with <see cref="INotifyingConfiguration"/> implementation
 		/// </summary>
 		/// <typeparam name="TConfiguration">type of <see cref="IConfiguration"/> to return</typeparam>
 		/// <returns><see cref="INotifyingConfiguration"/> implementation of actual <typeparamref name="TConfiguration"/></returns>
-		TConfiguration Notifying<TConfiguration>() where TConfiguration : IConfiguration;
+		TConfiguration Notifying<TConfiguration>() where TConfiguration : class, IConfiguration;
 
 		/// <summary>
 		/// return a read only configuration
 		/// </summary>
 		/// <typeparam name="TConfiguration"></typeparam>
 		/// <returns></returns>
-		TConfiguration Readonly<TConfiguration>() where TConfiguration : IConfiguration;
+		TConfiguration Readonly<TConfiguration>() where TConfiguration : class, IConfiguration;
 
 		/// <summary>
 		/// Method return actual <typeparamref name="TConfiguration"/> with <see cref="IRealtimeConfiguration"/> implementation
 		/// </summary>
 		/// <typeparam name="TConfiguration"></typeparam>
 		/// <returns></returns>
-		TConfiguration Realtime<TConfiguration>() where TConfiguration : IConfiguration;
+		TConfiguration Realtime<TConfiguration>() where TConfiguration : class, IConfiguration;
 
-		IConfigurator<TConfiguration> As<TConfiguration>() where TConfiguration : IConfiguration;
+		IConfigurator<TConfiguration> As<TConfiguration>() where TConfiguration : class, IConfiguration;
 
-		IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>() where TConfiguration : IConfiguration;
+		IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>() where TConfiguration : class, IConfiguration;
+
+		IConfiguration[] Get();
+
+		void Set(params IConfiguration[] configurations);
 	}
 
-	public interface IConfigurator<TConfiguration> where TConfiguration : IConfiguration {
+	public interface IConfigProvider {
 		bool IsExist();
 		void Reset();
+		void Save(IConfiguration value);
+		IConfiguration GetCopy();
+		INotifyingConfiguration GetNotifying();
+		IReadonlyConfiguration GetReadonly();
+		IRealtimeConfiguration GetRealtime();
+	}
+
+	public interface IConfigurator<TConfiguration> : IConfigProvider where TConfiguration : class, IConfiguration {
 		void Save(TConfiguration value);
 		TConfiguration Copy();
 		TConfiguration Notifying();
@@ -62,7 +79,7 @@ namespace ArtZilla.Config {
 		IConfigurator<TKey, TConfiguration> As<TKey>();
 	}
 
-	public interface IConfigurator<TKey, TConfiguration> : IEnumerable<TConfiguration> where TConfiguration : IConfiguration {
+	public interface IConfigurator<TKey, TConfiguration> : IEnumerable<TConfiguration> where TConfiguration : class, IConfiguration {
 		bool IsExist(TKey key);
 		void Reset(TKey key);
 		void Save(TKey key, TConfiguration value);
