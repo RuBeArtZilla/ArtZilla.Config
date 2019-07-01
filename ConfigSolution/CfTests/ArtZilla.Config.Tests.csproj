@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.3" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+		<PackageReference Include="MSTest.TestAdapter" Version="2.0.0-beta4" />
+		<PackageReference Include="MSTest.TestFramework" Version="2.0.0-beta4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ArtZilla.Config\ArtZilla.Config.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Properties\" />
+	</ItemGroup>
+</Project>

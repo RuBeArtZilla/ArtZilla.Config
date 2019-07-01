@@ -75,7 +75,7 @@ namespace ArtZilla.Config.Builders {
 
 			Debug.WriteLine("Creating type for " + ClassName);
 
-#if NET40 
+#if NET40 || NETCORE30
 			return Tb.CreateType();
 #else
 			var ti = Tb.CreateTypeInfo();
@@ -118,12 +118,12 @@ namespace ArtZilla.Config.Builders {
 
 		protected virtual void AddInterfaces() {
 			// Добавляем интерфейс конфигурации по умолчанию
-			RecursiveAddInterfaces(typeof(T));
+			InnerRecursiveAddInterfaces(typeof(T));
 			AddIConfigurationImplementation();
 
 			Tb.AddAttribute<DataContractAttribute>();
 
-			void RecursiveAddInterfaces(Type type) {
+			void InnerRecursiveAddInterfaces(Type type) {
 				foreach (var intf in type.GetInterfaces())
 					AddInterfaceImplementation(intf);
 				AddInterfaceImplementation(type);
@@ -191,8 +191,7 @@ namespace ArtZilla.Config.Builders {
 				il.Emit(OpCodes.Ldarg_1);
 				il.Emit(OpCodes.Castclass, typeof(T));
 				il.Emit(OpCodes.Callvirt, pi.GetGetMethod());
-				
-				il.Emit(OpCodes.Call, pi.GetSetMethod());
+				il.Emit(OpCodes.Callvirt, pi.GetSetMethod());
 			}
 
 			il.MarkLabel(end);

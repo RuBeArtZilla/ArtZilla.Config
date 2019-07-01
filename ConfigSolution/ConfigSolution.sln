@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.10
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29020.237
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{4DFA9DEF-3BB1-471C-A0C2-A5259CD41D2D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtZilla.Config", "ArtZilla.Config\ArtZilla.Config.csproj", "{F0272B4C-10AE-4BD1-8B65-09ABEABFAA90}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CfTests", "CfTests\CfTests.csproj", "{51CF7425-3B9C-4FC4-99DD-4C1D6E827584}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Config.Tests", "CfTests\ArtZilla.Config.Tests.csproj", "{18EF3A5B-B5DC-4E53-B9CE-64E80F495DA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +25,10 @@ Global
 		{51CF7425-3B9C-4FC4-99DD-4C1D6E827584}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51CF7425-3B9C-4FC4-99DD-4C1D6E827584}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51CF7425-3B9C-4FC4-99DD-4C1D6E827584}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18EF3A5B-B5DC-4E53-B9CE-64E80F495DA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18EF3A5B-B5DC-4E53-B9CE-64E80F495DA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18EF3A5B-B5DC-4E53-B9CE-64E80F495DA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18EF3A5B-B5DC-4E53-B9CE-64E80F495DA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,6 +36,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{F0272B4C-10AE-4BD1-8B65-09ABEABFAA90} = {4DFA9DEF-3BB1-471C-A0C2-A5259CD41D2D}
 		{51CF7425-3B9C-4FC4-99DD-4C1D6E827584} = {4DFA9DEF-3BB1-471C-A0C2-A5259CD41D2D}
+		{18EF3A5B-B5DC-4E53-B9CE-64E80F495DA6} = {4DFA9DEF-3BB1-471C-A0C2-A5259CD41D2D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1AD503BB-FE5D-419E-9E1E-24A5C30D3441}

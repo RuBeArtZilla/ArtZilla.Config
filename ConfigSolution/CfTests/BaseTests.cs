@@ -25,6 +25,14 @@ namespace CfTests {
 		}
 
 		[TestMethod]
+		public void StrangeConfigurationTest() {
+			var cfr = ConfigManager.GetDefaultConfigurator();
+			var cfg1 = cfr.Copy<ITestConfiguration>();
+			var cfg2 = cfr.Readonly<ITestConfiguration>();
+			cfg1.Copy(cfg2);
+		}
+
+		[TestMethod]
 		public void CreateConfigurationTest() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
 			cfr.Reset<ITestConfiguration>();
@@ -55,7 +63,7 @@ namespace CfTests {
 		[TestMethod]
 		public void TestKeyConfig() {
 			var cfr = ConfigManager.GetDefaultConfigurator();
-			
+
 
 
 		}
