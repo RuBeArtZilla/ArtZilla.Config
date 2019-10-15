@@ -26,8 +26,8 @@
 		<PackageCopyright>Copyright (c) 2017-2019 Artyom Fomin</PackageCopyright>
 		<RepositoryType>Github</RepositoryType>
 		<Company>ArtZilla's development</Company>
-		<Version>0.1.3.24</Version>
-		<AssemblyVersion>0.1.3.24</AssemblyVersion>
+		<Version>0.1.3.25</Version>
+		<AssemblyVersion>0.1.3.25</AssemblyVersion>
 		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>

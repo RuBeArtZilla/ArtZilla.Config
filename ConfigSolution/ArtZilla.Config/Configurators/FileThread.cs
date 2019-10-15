@@ -28,9 +28,10 @@ namespace ArtZilla.Config.Configurators {
 		public IStreamSerializer Serializer { get; set; } = new SimpleXmlSerializer();
 
 		public FileThread() : this(ConfigManager.AppName, ConfigManager.CompanyName) { }
-		public FileThread(string appName, string company = "") {
+		
+		public FileThread(string appName, string company = default) {
 			AppName = appName;
-			Company = company;
+			Company = company ?? ConfigManager.CompanyName ?? string.Empty;
 
 			_ioThread = new BackgroundRepeater(RepeatedWrite, TimeSpan.Zero, AsyncWrite);
 		}
@@ -116,55 +117,55 @@ namespace ArtZilla.Config.Configurators {
 			SpinWait.SpinUntil(() => _toSave.Count == 0 && !_isSaving);
 		}
 
-		private string GetPath<TConfiguration>() where TConfiguration : IConfiguration
+		protected virtual string GetPath<TConfiguration>() where TConfiguration : IConfiguration
 			=> _paths.GetOrAdd(typeof(TConfiguration), t => PathEx(GetDirectory<TConfiguration>(), GetFileName<TConfiguration>()));
 
-		private string GetPath<TKey, TConfiguration>(TKey key) where TConfiguration : IConfiguration
+		protected virtual string GetPath<TKey, TConfiguration>(TKey key) where TConfiguration : IConfiguration
 			=> _paths2.GetOrAdd((typeof(TConfiguration), typeof(TKey), key),
 				t => PathEx(GetDirectory<TKey, TConfiguration>(), GetFileName<TKey, TConfiguration>(key)));
 
-		private string GetPath(Type type)
+		protected virtual string GetPath(Type type)
 			=> _paths.GetOrAdd(type, t => PathEx(GetDirectory(t), GetFileName(t)));
 
-		private string GetDirectory<T>() where T : IConfiguration
+		protected virtual string GetDirectory<T>() where T : IConfiguration
 			=> GetDirectory(typeof(T));
 
-		private string GetDirectory<TKey, TConfiguration>() where TConfiguration : IConfiguration
+		protected virtual string GetDirectory<TKey, TConfiguration>() where TConfiguration : IConfiguration
 			=> GetDirectory(typeof(TConfiguration), typeof(TKey));
 
-		private string GetDirectory(Type type)
+		protected virtual string GetDirectory(Type type)
 			=> PathEx(GetBaseDirectory(type), Company, AppName);
 
-		private string GetDirectory(Type type, Type keyType)
+		protected virtual string GetDirectory(Type type, Type keyType)
 			=> PathEx(GetBaseDirectory(type), Company, AppName, type.Name + "_by_" + keyType.Name);
 
-		private string GetBaseDirectory(Type type)
+		protected virtual string GetBaseDirectory(Type type)
 			=> Environment.GetFolderPath(IsUserOnlyConfiguration(type)
 				? Environment.SpecialFolder.LocalApplicationData
 				: Environment.SpecialFolder.CommonApplicationData);
 
-		private string GetFileName<TConfiguration>()
+		protected virtual string GetFileName<TConfiguration>()
 			=> Net.Core.Extensions.StringExtensions.Combine(typeof(TConfiguration).Name, ExtensionSeparator, Extension);
 
-		private string GetFileName<TKey, TConfiguration>(TKey key)
+		protected virtual string GetFileName<TKey, TConfiguration>(TKey key)
 			=> Net.Core.Extensions.StringExtensions.Combine(key.ToString(), ExtensionSeparator, Extension);
 
-		private string GetFileName(Type type)
+		protected virtual string GetFileName(Type type)
 			=> Net.Core.Extensions.StringExtensions.Combine(type.Name, ExtensionSeparator, Extension);
 
-		private string PathEx(params string[] paths)
+		protected virtual string PathEx(params string[] paths)
 			=> Path.Combine(paths.Where(path => !string.IsNullOrWhiteSpace(path)).ToArray());
 
 		// todo: allow all users configuration
-		private bool IsUserOnlyConfiguration(Type type) => true;
+		protected virtual bool IsUserOnlyConfiguration(Type type) => true;
 
-		private Type GetSimpleType<TConfiguration>()
+		protected virtual Type GetSimpleType<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> typeof(TConfiguration).IsInterface
 				? TmpCfgClass<TConfiguration>.RealtimeType
 				: typeof(TConfiguration);
 
-		private void RepeatedWrite(CancellationToken token) {
+		protected virtual void RepeatedWrite(CancellationToken token) {
 			try {
 				var items = new List<(string Path, Type Type, IConfiguration Value)>();
 				if (_toSave.TryTake(out var item, Timeout.Infinite, token)) {
@@ -194,7 +195,7 @@ namespace ArtZilla.Config.Configurators {
 			}
 		}
 
-		private void WaitPath(string path) {
+		protected virtual void WaitPath(string path) {
 			if (!_isSaving)
 				return;
 
@@ -202,7 +203,7 @@ namespace ArtZilla.Config.Configurators {
 			SpinWait.SpinUntil(() => !_isSaving);
 		}
 
-		private void SaveToFile(string path, Type type, IConfiguration value) {
+		protected virtual void SaveToFile(string path, Type type, IConfiguration value) {
 			if (value is null) {
 				Remove(path);
 				return;
@@ -219,21 +220,21 @@ namespace ArtZilla.Config.Configurators {
 			}
 		}
 
-		private void CreateDirIfNotExist(string path) {
+		protected virtual void CreateDirIfNotExist(string path) {
 			var di = new DirectoryInfo(Path.GetDirectoryName(path));
 			if (!di.Exists)
 				di.Create();
 		}
 
-		private void Remove<TConfiguration>()
+		protected virtual void Remove<TConfiguration>()
 			where TConfiguration : IConfiguration
 			=> Remove(GetPath<TConfiguration>());
 
-		private void Remove<TKey, TConfiguration>(TKey key)
+		protected virtual void Remove<TKey, TConfiguration>(TKey key)
 			where TConfiguration : IConfiguration
 			=> Remove(GetPath<TKey, TConfiguration>(key));
 
-		private void Remove(string path) {
+		protected virtual void Remove(string path) {
 			WaitPath(path);
 			var fi = new FileInfo(path);
 			if (!fi.Exists) return;
