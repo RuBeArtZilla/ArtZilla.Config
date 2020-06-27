@@ -28,10 +28,12 @@
 		<Company>ArtZilla's development</Company>
 		<Version>0.1.3.25</Version>
 		<AssemblyVersion>0.1.3.25</AssemblyVersion>
-		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 		<IncludeSymbols>false</IncludeSymbols>
 		<IncludeSource>false</IncludeSource>
 		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net40'">
+		<RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
 	</PropertyGroup>
 	<!-- Common -->
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
