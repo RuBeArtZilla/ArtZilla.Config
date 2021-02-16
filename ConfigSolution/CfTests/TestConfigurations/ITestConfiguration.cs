@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.ComponentModel;
 using ArtZilla.Config;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CfTests {
 	public interface ITestConfiguration : IConfiguration {

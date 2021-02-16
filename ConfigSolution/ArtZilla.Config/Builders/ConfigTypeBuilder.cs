@@ -18,14 +18,14 @@ namespace ArtZilla.Config.Builders {
 			var ctorArgs = args?.Select(a => a.GetType()).ToArray() ?? Type.EmptyTypes;
 			var ctor = typeof(TAttribute).GetConstructor(ctorArgs);
 			Debug.Assert(ctor != null, nameof(ctor) + " != null");
-			tb.SetCustomAttribute(new CustomAttributeBuilder(ctor, args ?? new object[0]));
+			tb.SetCustomAttribute(new (ctor, args ?? new object[0]));
 		}
 
 		public static void AddAttribute<TAttribute>(this PropertyBuilder pb, params object[] args) where TAttribute : Attribute {
 			var ctorArgs = args?.Select(a => a.GetType()).ToArray() ?? Type.EmptyTypes;
 			var ctor = typeof(TAttribute).GetConstructor(ctorArgs);
 			Debug.Assert(ctor != null, nameof(ctor) + " != null");
-			pb.SetCustomAttribute(new CustomAttributeBuilder(ctor, args ?? new object[0]));
+			pb.SetCustomAttribute(new (ctor, args ?? new object[0]));
 		}
 
 		[Conditional("DEBUG")]
@@ -51,7 +51,7 @@ namespace ArtZilla.Config.Builders {
 		}
 	}
 	public abstract class ConfigTypeBuilder<T> where T : IConfiguration {
-		protected static ModuleBuilder Mb => _mb ?? (_mb = CreateModuleBuilder());
+		protected static ModuleBuilder Mb => _mb ??= CreateModuleBuilder();
 
 		protected virtual TypeAttributes ClassAttributes
 			=> TypeAttributes.Class
@@ -64,7 +64,7 @@ namespace ArtZilla.Config.Builders {
 
 		protected TypeBuilder Tb { get; set; }
 
-		public string ClassName => _className ?? (_className = ClassPrefix + "_" + typeof(T).Name);
+		public string ClassName => _className ??= ClassPrefix + "_" + typeof(T).Name;
 
 		public virtual Type Create() {
 			// Mb = CreateModuleBuilder();
@@ -301,10 +301,17 @@ namespace ArtZilla.Config.Builders {
 			pb.AddAttribute<DataMemberAttribute>();
 
 			var fb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
-			var dvp = pi.GetCustomAttributes(true).OfType<IDefaultValueProvider>().FirstOrDefault();
-			if (dvp != null)
+			var attributes = pi.GetCustomAttributes(true);
+			var dvp = attributes.OfType<IDefaultValueProvider>().FirstOrDefault();
+			if (dvp is null) {
+				var dva = attributes.OfType<System.ComponentModel.DefaultValueAttribute>().FirstOrDefault();
+				if (dva is not null)
+					dvp = new DefaultValueAttribute(dva.Value);
+			}
+			
+			if (dvp is not null)
 				AddDefaultFieldValue(fb, dvp);
-
+			
 			var spb = new SimplePropertyBuilder(pi, pb, fb, dvp);
 
 			if (pi.CanRead)
@@ -361,8 +368,14 @@ namespace ArtZilla.Config.Builders {
 			ipb.AddAttribute<XmlIgnoreAttribute>();
 
 			var ifb = GetOrCreatePrivateField(GetFieldName(pi), pi.PropertyType);
-			var dvp = pi.GetCustomAttributes(true).OfType<IDefaultValueProvider>().FirstOrDefault() ?? GetIListDefaultValue(pi);
-			if (dvp != null)
+			var attributes = pi.GetCustomAttributes(true);
+			var dvp = attributes.OfType<IDefaultValueProvider>().FirstOrDefault();
+			if (dvp is null) {
+				var dva = attributes.OfType<System.ComponentModel.DefaultValueAttribute>().FirstOrDefault();
+				dvp = dva is not null ? new DefaultValueAttribute(dva.Value) : GetIListDefaultValue(pi);
+			}
+
+			if (dvp is not null)
 				AddDefaultFieldValue(ifb, dvp);
 
 			var propType = itemType.MakeArrayType();
@@ -674,9 +687,9 @@ namespace ArtZilla.Config.Builders {
 		}
 
 		private string _className;
-		private readonly List<FieldBuilder> _fields = new List<FieldBuilder>();
-		private readonly List<MethodBuilder> _propMethods = new List<MethodBuilder>();
-		protected readonly List<(FieldBuilder Fb, IDefaultValueProvider Attr)> _fieldValues = new List<(FieldBuilder Fb, IDefaultValueProvider Attr)>();
+		private readonly List<FieldBuilder> _fields = new();
+		private readonly List<MethodBuilder> _propMethods = new();
+		protected readonly List<(FieldBuilder Fb, IDefaultValueProvider Attr)> _fieldValues = new();
 
 		private static ModuleBuilder _mb;
 	}

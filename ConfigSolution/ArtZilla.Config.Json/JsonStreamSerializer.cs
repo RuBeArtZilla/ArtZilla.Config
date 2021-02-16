@@ -27,4 +27,14 @@ namespace ArtZilla.Config {
 
 		private readonly JsonSerializer _serializer;
 	}
+
+	public class JsonFileThread : FileThread {
+		public JsonFileThread() 
+			: base() 
+			=> Serializer = new JsonStreamSerializer();
+
+		public JsonFileThread(string appName, string company) 
+			: base(appName, company) 
+			=> Serializer = new JsonStreamSerializer();
+	}
 }

@@ -13,7 +13,8 @@ namespace ArtZilla.Config {
 	}
 
 	[AttributeUsage(AttributeTargets.Property)]
-	public class DefaultValueAttribute : Attribute, IDefaultValueProvider {
+	[Obsolete("Will be replaced by System.ComponentModel.DefaultValueAttribute", false)]
+	internal class DefaultValueAttribute : Attribute, IDefaultValueProvider {
 		public object Value { get; }
 
 		public DefaultValueAttribute(object value)
@@ -26,10 +27,10 @@ namespace ArtZilla.Config {
 		static object ConvertFromString(Type type, string strValue)
 			=> _converters.TryGetValue(type, out var f)
 				? f(strValue)
-				: throw new Exception("Can't convert " + strValue + " to instance of type " + type.Name);
+				: throw new ("Can't convert " + strValue + " to instance of type " + type.Name);
 
-		static Dictionary<Type, Func<string, object>> _converters
-			= new Dictionary<Type, Func<string, object>> {
+		static readonly Dictionary<Type, Func<string, object>> _converters
+			= new () {
 				[typeof(byte)] = s => byte.Parse(s),
 				[typeof(sbyte)] = s => sbyte.Parse(s),
 				[typeof(short)] = s => short.Parse(s),
