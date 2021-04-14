@@ -11,72 +11,53 @@ namespace ArtZilla.Config.Configurators {
 		public bool IsExist<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().IsExist();
-
-		/// <summary>
-		/// Reset <typeparamref name="TConfiguration" /> to default values
-		/// </summary>
-		/// <typeparam name="TConfiguration"></typeparam>
+		
+		/// <inheritdoc />
 		public virtual void Reset<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().Reset();
 
 		public void Clear() => _dict.Clear();
 
-		/// <summary>
-		/// Save <paramref name="value" /> as <typeparamref name="TConfiguration" />
-		/// </summary>
-		/// <typeparam name="TConfiguration"></typeparam>
-		/// <param name="value"></param>
+		/// <inheritdoc />
 		public virtual void Save<TConfiguration>(TConfiguration value)
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().Save(value);
 
-		/// <summary>
-		/// return a copy of actual <typeparamref name="TConfiguration" />
-		/// </summary>
-		/// <typeparam name="TConfiguration"></typeparam>
-		/// <returns></returns>
+		/// <inheritdoc />
 		public virtual TConfiguration Copy<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().Copy();
 
-		/// <summary>
-		/// return a read only configuration
-		/// </summary>
-		/// <typeparam name="TConfiguration"></typeparam>
-		/// <returns></returns>
+		/// <inheritdoc />
 		public virtual TConfiguration Readonly<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().Readonly();
 
-		/// <summary>
-		/// Method return a copy of actual <typeparamref name="TConfiguration" /> with <see cref="INotifyingConfiguration" /> implementation
-		/// </summary>
-		/// <typeparam name="TConfiguration">type of <see cref="IConfiguration" /> to return</typeparam>
-		/// <returns><see cref="INotifyingConfiguration" /> implementation of actual <typeparamref name="TConfiguration" /></returns>
+		/// <inheritdoc />
 		public virtual TConfiguration Notifying<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().Notifying();
 
-		/// <summary>
-		/// Method return actual <typeparamref name="TConfiguration" /> with <see cref="IRealtimeConfiguration" /> implementation
-		/// </summary>
-		/// <typeparam name="TConfiguration"></typeparam>
-		/// <returns></returns>
+		/// <inheritdoc />
 		public virtual TConfiguration Realtime<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().Realtime();
 
+		/// <inheritdoc />
 		public IConfigurator<TConfiguration> As<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> (IConfigurator<TConfiguration>) _dict.GetOrAdd(typeof(TConfiguration), CreateTypedConfigurator<TConfiguration>());
 
+		/// <inheritdoc />
 		public IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().As<TKey>();
 
+		/// <inheritdoc />
 		public IConfiguration[] Get() => _dict.Values.Select(c => c.GetCopy()).ToArray();
 
+		/// <inheritdoc />
 		public void Set(params IConfiguration[] configurations) {
 			throw new NotImplementedException();
 		}
@@ -119,47 +100,61 @@ namespace ArtZilla.Config.Configurators {
 
 	public class MemoryConfigurator<TConfiguration>
 		: IConfigurator<TConfiguration> where TConfiguration : class, IConfiguration {
+		/// <inheritdoc />
 		public virtual bool IsExist() {
 			lock (_guard) {
 				return !EqualityComparer<TConfiguration>.Default.Equals(Value, default);
 			}
 		}
 
+		/// <inheritdoc />
 		public virtual void Reset() {
 			lock (_guard) {
 				Save(CreateDefault());
 			}
 		}
 
-		public void Save(IConfiguration value) => Get().Copy(value);
+		/// <inheritdoc />
+		public void Save(IConfiguration value) 
+			=> Get().Copy(value);
 
+		/// <inheritdoc />
 		public IConfiguration GetCopy()
 			=> Copy();
 
+		/// <inheritdoc />
 		public INotifyingConfiguration GetNotifying()
 			=> (INotifyingConfiguration) Notifying();
 
+		/// <inheritdoc />
 		public IReadonlyConfiguration GetReadonly()
 			=> (IReadonlyConfiguration) Readonly();
 
+		/// <inheritdoc />
 		public IRealtimeConfiguration GetRealtime()
 			=> (IRealtimeConfiguration) Realtime();
 
+		/// <inheritdoc />
 		public virtual void Save(TConfiguration value)
 			=> Get().Copy(value);
 
+		/// <inheritdoc />
 		public virtual TConfiguration Copy()
 			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get());
 
+		/// <inheritdoc />
 		public virtual TConfiguration Notifying()
 			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get());
 
+		/// <inheritdoc />
 		public virtual TConfiguration Readonly()
 			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get());
 
+		/// <inheritdoc />
 		public virtual TConfiguration Realtime()
 			=> Get();
 
+		/// <inheritdoc />
 		public virtual IConfigurator<TKey, TConfiguration> As<TKey>()
 			=> (IConfigurator<TKey, TConfiguration>) _dict.GetOrAdd(typeof(TKey), CreateKeysConfigurator<TKey>());
 
@@ -199,34 +194,43 @@ namespace ArtZilla.Config.Configurators {
 
 	public class MemoryConfigurator<TKey, TConfiguration>
 		: IConfigurator<TKey, TConfiguration> where TConfiguration : class,  IConfiguration {
+		/// <inheritdoc />
 		public TConfiguration this[TKey key] {
 			get => Get(key);
 			set => Save(key, value);
 		}
 
+		/// <inheritdoc />
 		public virtual bool IsExist(TKey key)
 			=> _cache.ContainsKey(key);
 
+		/// <inheritdoc />
 		public virtual void Reset(TKey key) {
 			if (_cache.TryRemove(key, out var removed))
 				Unsubscribe(key, removed.Configuration, removed.Handler);
 		}
 
+		/// <inheritdoc />
 		public virtual void Save(TKey key, TConfiguration value)
 			=> Get(key).Copy(value);
 
+		/// <inheritdoc />
 		public virtual TConfiguration Copy(TKey key)
 			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get(key));
 
+		/// <inheritdoc />
 		public virtual TConfiguration Notifying(TKey key)
 			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get(key));
 
+		/// <inheritdoc />
 		public virtual TConfiguration Readonly(TKey key)
 			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get(key));
 
+		/// <inheritdoc />
 		public virtual TConfiguration Realtime(TKey key)
 			=> Get(key);
 
+		/// <inheritdoc />
 		public IEnumerator<TConfiguration> GetEnumerator()
 			=> _cache.Values.Select(i => i.Configuration).GetEnumerator();
 
@@ -266,7 +270,6 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		private readonly ConcurrentDictionary<TKey, (TConfiguration Configuration, PropertyChangedEventHandler Handler)>
-			_cache
-				= new ConcurrentDictionary<TKey, (TConfiguration Configuration, PropertyChangedEventHandler Handler)>();
+			_cache = new();
 	}
 }
