@@ -32,7 +32,7 @@ namespace CfTests {
 
 		[TestMethod]
 		public void SimpleSaveTest() => RunAll(SaveTest);
-		
+
 		[TestMethod]
 		public void ComplexResetTest() => RunAll(ResetTest);
 
@@ -68,6 +68,17 @@ namespace CfTests {
 
 		[TestMethod]
 		public void InheritanceTest() => RunAll(InheritanceTest);
+
+		[TestMethod]
+		public void CopyContentTest() {
+			var (src, dst) = (Create(), Create());
+
+			var srcCfg = src.Realtime<IExampleSettings>();
+			srcCfg.Fill1();
+			src.CloneTo(dst);
+			var dstCfg = dst.Realtime<IExampleSettings>();
+			Assert.IsTrue(srcCfg.IsEqual(dstCfg));
+		}
 
 		protected virtual void KeysExistTest(T ctr) {
 			var cfr = ctr.As<int, ITestConfiguration>();
@@ -212,7 +223,7 @@ namespace CfTests {
 			Assert.IsNotNull(a.Realtime().Heroes);
 			Assert.IsNotNull(a.Readonly().Heroes);
 			Assert.IsNotNull(a.Notifying().Heroes);
-			
+
 			// Debug.WriteLine("Type of collection: " + x.Heroes.GetType());
 			x.Heroes.Clear();
 			x.Heroes.Add(new Hero("Midoria"));
@@ -225,7 +236,7 @@ namespace CfTests {
 			x.Names.Add("Homura");
 
 			ctr.Save(x);
-			
+
 			var z = ctr.As<IListConfiguration>().Copy();
 
 			Assert.AreEqual(3, z.Heroes.Count);

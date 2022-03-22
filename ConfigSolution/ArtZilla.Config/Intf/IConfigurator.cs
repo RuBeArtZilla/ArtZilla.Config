@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ArtZilla.Config {
 	public interface IConfigurator {
@@ -7,13 +8,11 @@ namespace ArtZilla.Config {
 		/// </summary>
 		void Clear();
 
-		/// <summary>
 		/// Save <paramref name="value"/> as <typeparamref name="TConfiguration"/>
-		/// </summary>
 		/// <typeparam name="TConfiguration"></typeparam>
 		/// <param name="value"></param>
 		void Save<TConfiguration>(TConfiguration value) where TConfiguration : class, IConfiguration;
-
+		
 		/// <summary>
 		/// Reset <typeparamref name="TConfiguration"/> to default values
 		/// </summary>
@@ -57,6 +56,8 @@ namespace ArtZilla.Config {
 		IConfiguration[] Get();
 
 		void Set(params IConfiguration[] configurations);
+
+		void CloneTo(IConfigurator destination);
 	}
 
 	public interface IConfigProvider {

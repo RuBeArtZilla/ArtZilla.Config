@@ -11,7 +11,7 @@ namespace ArtZilla.Config.Configurators {
 		public bool IsExist<TConfiguration>()
 			where TConfiguration : class, IConfiguration
 			=> As<TConfiguration>().IsExist();
-		
+
 		/// <inheritdoc />
 		public virtual void Reset<TConfiguration>()
 			where TConfiguration : class, IConfiguration
@@ -47,7 +47,8 @@ namespace ArtZilla.Config.Configurators {
 		/// <inheritdoc />
 		public IConfigurator<TConfiguration> As<TConfiguration>()
 			where TConfiguration : class, IConfiguration
-			=> (IConfigurator<TConfiguration>) _dict.GetOrAdd(typeof(TConfiguration), CreateTypedConfigurator<TConfiguration>());
+			=> (IConfigurator<TConfiguration>)_dict.GetOrAdd(typeof(TConfiguration),
+																												CreateTypedConfigurator<TConfiguration>());
 
 		/// <inheritdoc />
 		public IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>()
@@ -55,11 +56,28 @@ namespace ArtZilla.Config.Configurators {
 			=> As<TConfiguration>().As<TKey>();
 
 		/// <inheritdoc />
-		public IConfiguration[] Get() => _dict.Values.Select(c => c.GetCopy()).ToArray();
+		public IConfiguration[] Get()
+			=> _dict.Values.Select(c => c.GetCopy()).ToArray();
 
 		/// <inheritdoc />
 		public void Set(params IConfiguration[] configurations) {
 			throw new NotImplementedException();
+		}
+
+		/// <inheritdoc />
+		public void CloneTo(IConfigurator destination) {
+			destination.Clear();
+			foreach (var pair in _dict) {
+				var configuration = destination.GetType()
+																.GetMethod(nameof(IConfigurator.Readonly))
+																.MakeGenericMethod(pair.Key)
+																.Invoke(destination, null);
+
+				typeof(MemoryConfigurator)
+									 .GetMethod(nameof(IConfigurator.Save))
+									 .MakeGenericMethod(pair.Key)
+									 .Invoke(this, new[] { configuration });
+			}
 		}
 
 		protected virtual TConfiguration Load<TConfiguration>()
@@ -68,14 +86,14 @@ namespace ArtZilla.Config.Configurators {
 
 		protected virtual TConfiguration CreateDefault<TConfiguration>()
 			where TConfiguration : class, IConfiguration {
-			var cfg = (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
+			var cfg = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
 			Subscribe(cfg);
 			return cfg;
 		}
 
 		protected virtual void Subscribe<TConfiguration>(TConfiguration cfg)
 			where TConfiguration : class, IConfiguration {
-			var real = (IRealtimeConfiguration) cfg;
+			var real = (IRealtimeConfiguration)cfg;
 			real.PropertyChanged += ConfigurationChanged<TConfiguration>;
 		}
 
@@ -94,7 +112,7 @@ namespace ArtZilla.Config.Configurators {
 			where TConfiguration : class, IConfiguration
 			=> new MemoryConfigurator<TConfiguration>();
 
-		private readonly ConcurrentDictionary<Type, IConfigProvider> _dict
+		readonly ConcurrentDictionary<Type, IConfigProvider> _dict
 			= new ConcurrentDictionary<Type, IConfigProvider>();
 	}
 
@@ -115,7 +133,7 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		/// <inheritdoc />
-		public void Save(IConfiguration value) 
+		public void Save(IConfiguration value)
 			=> Get().Copy(value);
 
 		/// <inheritdoc />
@@ -124,15 +142,15 @@ namespace ArtZilla.Config.Configurators {
 
 		/// <inheritdoc />
 		public INotifyingConfiguration GetNotifying()
-			=> (INotifyingConfiguration) Notifying();
+			=> (INotifyingConfiguration)Notifying();
 
 		/// <inheritdoc />
 		public IReadonlyConfiguration GetReadonly()
-			=> (IReadonlyConfiguration) Readonly();
+			=> (IReadonlyConfiguration)Readonly();
 
 		/// <inheritdoc />
 		public IRealtimeConfiguration GetRealtime()
-			=> (IRealtimeConfiguration) Realtime();
+			=> (IRealtimeConfiguration)Realtime();
 
 		/// <inheritdoc />
 		public virtual void Save(TConfiguration value)
@@ -140,15 +158,15 @@ namespace ArtZilla.Config.Configurators {
 
 		/// <inheritdoc />
 		public virtual TConfiguration Copy()
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get());
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get());
 
 		/// <inheritdoc />
 		public virtual TConfiguration Notifying()
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get());
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get());
 
 		/// <inheritdoc />
 		public virtual TConfiguration Readonly()
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get());
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get());
 
 		/// <inheritdoc />
 		public virtual TConfiguration Realtime()
@@ -156,7 +174,7 @@ namespace ArtZilla.Config.Configurators {
 
 		/// <inheritdoc />
 		public virtual IConfigurator<TKey, TConfiguration> As<TKey>()
-			=> (IConfigurator<TKey, TConfiguration>) _dict.GetOrAdd(typeof(TKey), CreateKeysConfigurator<TKey>());
+			=> (IConfigurator<TKey, TConfiguration>)_dict.GetOrAdd(typeof(TKey), CreateKeysConfigurator<TKey>());
 
 		protected virtual IConfigurator<TKey, TConfiguration> CreateKeysConfigurator<TKey>()
 			=> new MemoryConfigurator<TKey, TConfiguration>();
@@ -173,13 +191,13 @@ namespace ArtZilla.Config.Configurators {
 			=> CreateDefault();
 
 		protected virtual TConfiguration CreateDefault() {
-			var cfg = (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
+			var cfg = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
 			Subscribe(cfg);
 			return cfg;
 		}
 
 		protected virtual void Subscribe(TConfiguration cfg)
-			=> ((IRealtimeConfiguration) cfg).PropertyChanged += ConfigurationChanged;
+			=> ((IRealtimeConfiguration)cfg).PropertyChanged += ConfigurationChanged;
 
 		protected virtual void ConfigurationChanged(object sender, PropertyChangedEventArgs e) {
 			//
@@ -193,9 +211,10 @@ namespace ArtZilla.Config.Configurators {
 	}
 
 	public class MemoryConfigurator<TKey, TConfiguration>
-		: IConfigurator<TKey, TConfiguration> where TConfiguration : class,  IConfiguration {
+		: IConfigurator<TKey, TConfiguration> where TConfiguration : class, IConfiguration {
 		/// <inheritdoc />
-		public TConfiguration this[TKey key] {
+		public TConfiguration this[TKey key]
+		{
 			get => Get(key);
 			set => Save(key, value);
 		}
@@ -216,15 +235,15 @@ namespace ArtZilla.Config.Configurators {
 
 		/// <inheritdoc />
 		public virtual TConfiguration Copy(TKey key)
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get(key));
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get(key));
 
 		/// <inheritdoc />
 		public virtual TConfiguration Notifying(TKey key)
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get(key));
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get(key));
 
 		/// <inheritdoc />
 		public virtual TConfiguration Readonly(TKey key)
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get(key));
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get(key));
 
 		/// <inheritdoc />
 		public virtual TConfiguration Realtime(TKey key)
@@ -249,7 +268,7 @@ namespace ArtZilla.Config.Configurators {
 			=> CreateDefault(key);
 
 		protected virtual TConfiguration CreateDefault(TKey key)
-			=> (TConfiguration) Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
+			=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
 
 		protected virtual PropertyChangedEventHandler Subscribe(TKey key, TConfiguration cfg) {
 			PropertyChangedEventHandler handler = (s, e) => ConfigurationChanged(key, cfg, e.PropertyName);
@@ -258,11 +277,11 @@ namespace ArtZilla.Config.Configurators {
 		}
 
 		protected virtual void Subscribe(TKey key, TConfiguration cfg, PropertyChangedEventHandler handler) {
-			((IRealtimeConfiguration) cfg).PropertyChanged += handler;
+			((IRealtimeConfiguration)cfg).PropertyChanged += handler;
 		}
 
 		protected virtual void Unsubscribe(TKey key, TConfiguration cfg, PropertyChangedEventHandler handler) {
-			((IRealtimeConfiguration) cfg).PropertyChanged -= handler;
+			((IRealtimeConfiguration)cfg).PropertyChanged -= handler;
 		}
 
 		protected virtual void ConfigurationChanged(TKey key, TConfiguration configuration, string propertyName) {

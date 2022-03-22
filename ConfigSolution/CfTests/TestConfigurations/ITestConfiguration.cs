@@ -5,46 +5,46 @@ using ArtZilla.Config;
 namespace CfTests {
 	public interface ITestConfiguration : IConfiguration {
 		[DefaultValue(TestConfiguration.DefaultInt8)]
-		SByte SByte  { get; set; }
+		sbyte SByte  { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultInt16)]
-		Int16 Int16 { get; set; }
+		short Int16 { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultInt32)]
-		Int32 Int32 { get; set; }
+		int Int32 { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultInt64)]
-		Int64 Int64 { get; set; }
+		long Int64 { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultUInt8)]
-		Byte Byte { get; set; }
+		byte Byte { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultUInt16)]
-		UInt16 UInt16 { get; set; }
+		ushort UInt16 { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultUInt32)]
-		UInt32 UInt32 { get; set; }
+		uint UInt32 { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultUInt64)]
-		UInt64 UInt64 { get; set; }
+		ulong UInt64 { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultSingle)]
-		Single Single { get; set; }
+		float Single { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultDouble)]
-		Double Double { get; set; }
+		double Double { get; set; }
 
 		//[DefaultValue(typeof(Decimal), "0.0042")]
 		//[DefaultValue(TestConfiguration.DefaultDecimal)]
 		//Decimal Decimal { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultBoolean)]
-		Boolean Boolean { get; set; }
+		bool Boolean { get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultChar)]
-		Char Char{ get; set; }
+		char Char{ get; set; }
 
 		[DefaultValue(TestConfiguration.DefaultString)]
-		String String { get; set; }
+		string String { get; set; }
 	}
 }

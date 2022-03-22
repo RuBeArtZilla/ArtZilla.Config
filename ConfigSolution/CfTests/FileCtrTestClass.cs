@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ArtZilla.Config;
 using ArtZilla.Config.Configurators;
 using ArtZilla.Config.Tests.TestConfigurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CfTests {
 	[TestClass]
 	public class FileCtrTestClass: ConfiguratorTestClass<FileConfigurator> {
-		protected override FileConfigurator Create() => new FileConfigurator(nameof(FileCtrTestClass));
+		protected override FileConfigurator Create() 
+			=> new FileConfigurator(nameof(FileCtrTestClass));
 
 		protected override IEnumerable<FileConfigurator> CreateAllVariants() {
 			yield return Create();
@@ -82,5 +84,11 @@ namespace CfTests {
 			x2.ValueArray = new[] {4, 8, 15, 16, 23, 42};
 			s.Flush();
 		}
+	}
+
+	[TestClass]
+	public class JsonFileConfiguratorTests : ConfiguratorTestClass<FileConfigurator> {
+		protected override FileConfigurator Create() 
+			=> new FileConfigurator(new JsonFileThread(nameof(JsonFileConfiguratorTests), "AZ"));
 	}
 }

@@ -10,14 +10,6 @@ namespace ArtZilla.Config.Tests.TestConfigurations {
 		List<int> ValueList { get; set; }
 		Dictionary<int, string> ValueDictionary { get; set; }
 	}
-	
-	public enum Girls : long {
-		Madoka = 0,
-		Homura = 1,
-		Sayaka = 2,
-		Kyoko = 3,
-		Mami = 4,
-	}
 
 	public interface IConfigWithGuid : IConfiguration {
 		[DefaultValueByCtor(typeof(Guid), "{D1F71EC6-76A6-40F8-8910-68E67D753CD4}")]
