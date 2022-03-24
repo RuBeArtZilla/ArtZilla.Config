@@ -1,0 +1,18 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <OutputType>Library</OutputType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <PackageTags>ArtZilla;.Net;Configuration Framework</PackageTags>
+    
+    <PackageProjectUrl>https://artzilla.name/ArtZilla.Net.Config/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    
+    <Version>0.2.0</Version>
+    <PackageVersion>0.2.0</PackageVersion>
+  </PropertyGroup>
+</Project>

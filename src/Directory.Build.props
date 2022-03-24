@@ -1,0 +1,44 @@
+<Project>
+  <!-- 
+    https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019
+  -->
+  <PropertyGroup>
+    <Product>Configuration framework</Product>
+    <Authors>ArtZilla</Authors>
+    <Company>ArtZilla's development</Company>
+    <Copyright>Copyright (c) 2017-2022 Artyom Fomin</Copyright>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <!-- *** Configurations *** -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- *** Target frameworks *** -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
+    <DefineConstants>$(DefineConstants);NET40;NETFULL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
+    <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD20</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+    <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET50</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0-windows'">
+    <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET50</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0'">
+    <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET60_OR_GREATER;NET60</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0-windows'">
+    <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET60_OR_GREATER;NET60</DefineConstants>
+  </PropertyGroup>
+</Project>
