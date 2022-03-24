@@ -240,5 +240,3 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-/ConfigSolution/.idea/.idea.ConfigSolution
-/ConfigSolution/ArtZilla.Config/ArtZilla.Config.csproj.DotSettings
