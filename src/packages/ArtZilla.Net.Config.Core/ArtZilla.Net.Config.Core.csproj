@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\package.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
+		<PackageIcon>Icon.png</PackageIcon>
+		<Summary>Configuration Framework (core)</Summary>
+		<Description>Configuration Framework (core)</Description>
+		<RootNamespace>ArtZilla.Net.Config</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="Icon.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.9" />
+		<PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+		
+	<Import Project="..\..\shared\ArtZilla.Net.Config.SharedFiles\ArtZilla.Net.Config.SharedFiles.projitems" Label="Shared" />
+
+</Project>

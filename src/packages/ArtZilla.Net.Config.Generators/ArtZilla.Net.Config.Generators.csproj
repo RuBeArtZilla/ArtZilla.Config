@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\package.props" />
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		
+		<PackageIcon>Icon.png</PackageIcon>
+		<Summary>Configuration Framework (generators package)</Summary>
+		<Description>Configuration Framework (generators package)</Description>
+		<Nullable>enable</Nullable>		
+		
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="JetBrains.Annotations" Version="2022.1.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.2.0" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="Icon.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<Import Project="..\..\shared\ArtZilla.Net.Config.SharedFiles\ArtZilla.Net.Config.SharedFiles.projitems" 
+	        Label="Shared"/>
+</Project>

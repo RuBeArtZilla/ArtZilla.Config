@@ -12,9 +12,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D8328347
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{DFD3AD6C-7615-46C0-AD8B-DC97B33BAC1B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtZilla.Net.Config", "packages\ArtZilla.Net.Config\ArtZilla.Net.Config.csproj", "{5F0610B3-153D-4991-938F-BEF992439CE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtZilla.Net.Config.Core", "packages\ArtZilla.Net.Config.Core\ArtZilla.Net.Config.Core.csproj", "{5F0610B3-153D-4991-938F-BEF992439CE6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtZilla.Net.Config.Json", "packages\ArtZilla.Net.Config.Json\ArtZilla.Net.Config.Json.csproj", "{8A65370C-D45C-462A-A6CD-74A86A8F0930}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtZilla.Net.Config.SourceGenerated.Json", "packages\ArtZilla.Net.Config.SourceGenerated.Json\ArtZilla.Net.Config.SourceGenerated.Json.csproj", "{8A65370C-D45C-462A-A6CD-74A86A8F0930}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{FFE6A961-6BFF-4D5F-8921-D05DD0A36A52}"
 	ProjectSection(SolutionItems) = preProject
@@ -22,7 +22,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{FFE6A9
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtZilla.Net.Config.Tests", "tests\ArtZilla.Net.Config.Tests\ArtZilla.Net.Config.Tests.csproj", "{EB3008F8-FFE3-4CAA-ADE4-82663D857421}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config.Generators", "packages\ArtZilla.Net.Config.Generators\ArtZilla.Net.Config.Generators.csproj", "{4976F680-596F-446F-A53E-FBFE77D90E63}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ArtZilla.Net.Config.SharedFiles", "shared\ArtZilla.Net.Config.SharedFiles\ArtZilla.Net.Config.SharedFiles.shproj", "{88BA9280-5E73-4A2B-8BC1-6D50E0841DAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config", "packages\ArtZilla.Net.Config\ArtZilla.Net.Config.csproj", "{D8090C49-5E6E-4CB9-8237-7087C2D8DCB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config.EmitGenerated", "packages\ArtZilla.Net.Config.EmitGenerated\ArtZilla.Net.Config.EmitGenerated.csproj", "{0274E843-7C05-4799-B6AD-1DD1A0D4B3F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config.Tests", "tests\ArtZilla.Net.Config.Tests\ArtZilla.Net.Config.Tests.csproj", "{BE492843-3542-49B6-9914-BB6BAED22C37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config.SourceGenerated", "packages\ArtZilla.Net.Config.SourceGenerated\ArtZilla.Net.Config.SourceGenerated.csproj", "{916F2B32-B6B8-454C-8FA1-29201DB728FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config.EmitGenerated.Json", "packages\ArtZilla.Net.Config.EmitGenerated.Json\ArtZilla.Net.Config.EmitGenerated.Json.csproj", "{C237C325-8FD9-48BF-9343-D3DF222A3422}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtZilla.Net.Config.SourceGenerated.Core", "packages\ArtZilla.Net.Config.SourceGenerated.Core\ArtZilla.Net.Config.SourceGenerated.Core.csproj", "{E5C4EDD0-E0FB-450B-9179-64CB4EB4D409}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,10 +52,34 @@ Global
 		{8A65370C-D45C-462A-A6CD-74A86A8F0930}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A65370C-D45C-462A-A6CD-74A86A8F0930}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A65370C-D45C-462A-A6CD-74A86A8F0930}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EB3008F8-FFE3-4CAA-ADE4-82663D857421}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EB3008F8-FFE3-4CAA-ADE4-82663D857421}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EB3008F8-FFE3-4CAA-ADE4-82663D857421}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EB3008F8-FFE3-4CAA-ADE4-82663D857421}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4976F680-596F-446F-A53E-FBFE77D90E63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4976F680-596F-446F-A53E-FBFE77D90E63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4976F680-596F-446F-A53E-FBFE77D90E63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4976F680-596F-446F-A53E-FBFE77D90E63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8090C49-5E6E-4CB9-8237-7087C2D8DCB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8090C49-5E6E-4CB9-8237-7087C2D8DCB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8090C49-5E6E-4CB9-8237-7087C2D8DCB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8090C49-5E6E-4CB9-8237-7087C2D8DCB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0274E843-7C05-4799-B6AD-1DD1A0D4B3F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0274E843-7C05-4799-B6AD-1DD1A0D4B3F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0274E843-7C05-4799-B6AD-1DD1A0D4B3F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0274E843-7C05-4799-B6AD-1DD1A0D4B3F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE492843-3542-49B6-9914-BB6BAED22C37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE492843-3542-49B6-9914-BB6BAED22C37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE492843-3542-49B6-9914-BB6BAED22C37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE492843-3542-49B6-9914-BB6BAED22C37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{916F2B32-B6B8-454C-8FA1-29201DB728FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{916F2B32-B6B8-454C-8FA1-29201DB728FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{916F2B32-B6B8-454C-8FA1-29201DB728FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{916F2B32-B6B8-454C-8FA1-29201DB728FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C237C325-8FD9-48BF-9343-D3DF222A3422}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C237C325-8FD9-48BF-9343-D3DF222A3422}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C237C325-8FD9-48BF-9343-D3DF222A3422}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C237C325-8FD9-48BF-9343-D3DF222A3422}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5C4EDD0-E0FB-450B-9179-64CB4EB4D409}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5C4EDD0-E0FB-450B-9179-64CB4EB4D409}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5C4EDD0-E0FB-450B-9179-64CB4EB4D409}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5C4EDD0-E0FB-450B-9179-64CB4EB4D409}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,7 +87,14 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5F0610B3-153D-4991-938F-BEF992439CE6} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
 		{8A65370C-D45C-462A-A6CD-74A86A8F0930} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
-		{EB3008F8-FFE3-4CAA-ADE4-82663D857421} = {D8328347-E46A-4D0C-835D-8116EEA59A9A}
+		{4976F680-596F-446F-A53E-FBFE77D90E63} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
+		{88BA9280-5E73-4A2B-8BC1-6D50E0841DAE} = {FFE6A961-6BFF-4D5F-8921-D05DD0A36A52}
+		{D8090C49-5E6E-4CB9-8237-7087C2D8DCB8} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
+		{0274E843-7C05-4799-B6AD-1DD1A0D4B3F1} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
+		{BE492843-3542-49B6-9914-BB6BAED22C37} = {D8328347-E46A-4D0C-835D-8116EEA59A9A}
+		{916F2B32-B6B8-454C-8FA1-29201DB728FD} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
+		{C237C325-8FD9-48BF-9343-D3DF222A3422} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
+		{E5C4EDD0-E0FB-450B-9179-64CB4EB4D409} = {BC806C5C-E716-4DD5-BFCC-6A152127ED8F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1AD503BB-FE5D-419E-9E1E-24A5C30D3441}

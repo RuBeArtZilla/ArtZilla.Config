@@ -1,24 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\package.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;netstandard2.0;net45;net40</TargetFrameworks>
+		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 		<PackageIcon>Icon.png</PackageIcon>
 		<Summary>Configuration Framework</Summary>
 		<Description>Configuration Framework</Description>
+		<RootNamespace>ArtZilla.Net.Config</RootNamespace>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="Icon.png" Pack="true" PackagePath="\" />
+	  <ProjectReference Include="..\ArtZilla.Net.Config.Core\ArtZilla.Net.Config.Core.csproj" />
+	  <ProjectReference Include="..\ArtZilla.Net.Config.SourceGenerated\ArtZilla.Net.Config.SourceGenerated.csproj" />
+		<ProjectReference Include="..\ArtZilla.Net.Config.Generators\ArtZilla.Net.Conf ig.Generators.csproj"
+		                  OutputItemType="Analyzer"
+		                  ReferenceOutputAssembly="false"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ArtZilla.Net.Core" Version="1.1.9" />
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-	</ItemGroup>
-	
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net40'">
-		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>

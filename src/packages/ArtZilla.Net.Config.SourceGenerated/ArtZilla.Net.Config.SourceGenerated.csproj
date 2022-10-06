@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
+		<PackageIcon>Icon.png</PackageIcon>
+		<Summary>Configuration Framework (SourceGenerated part)</Summary>
+		<Description>Configuration Framework (SourceGenerated part)</Description>
+		<RootNamespace>ArtZilla.Net.Config</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ArtZilla.Net.Config.SourceGenerated.Core\ArtZilla.Net.Config.SourceGenerated.Core.csproj"/>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+		<ProjectReference Include="..\ArtZilla.Net.Config.SourceGenerated.Json\ArtZilla.Net.Config.SourceGenerated.Json.csproj"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Icon.png" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+
+</Project>

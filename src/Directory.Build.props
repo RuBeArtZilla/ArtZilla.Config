@@ -7,6 +7,8 @@
     <Authors>ArtZilla</Authors>
     <Company>ArtZilla's development</Company>
     <Copyright>Copyright (c) 2017-2022 Artyom Fomin</Copyright>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
@@ -20,20 +22,8 @@
   </PropertyGroup>
 
   <!-- *** Target frameworks *** -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
-    <DefineConstants>$(DefineConstants);NET40;NETFULL</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
-    <DefineConstants>$(DefineConstants);NET45;NETFULL</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
+ <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD20</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
-    <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET50</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0-windows'">
-    <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET50</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0'">
     <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET60_OR_GREATER;NET60</DefineConstants>

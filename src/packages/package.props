@@ -6,13 +6,12 @@
     <OutputType>Library</OutputType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
-    <PackageTags>ArtZilla;.Net;Configuration Framework</PackageTags>
-    
+    <PackageTags>ArtZilla;.Net;Configuration Framework</PackageTags>    
     <PackageProjectUrl>https://artzilla.name/ArtZilla.Net.Config/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     
-    <Version>0.2.0</Version>
-    <PackageVersion>0.2.0</PackageVersion>
+    <Version>0.5.0</Version>
+    <PackageVersion>0.5.0</PackageVersion>
   </PropertyGroup>
 </Project>
