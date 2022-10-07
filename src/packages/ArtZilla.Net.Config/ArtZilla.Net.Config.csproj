@@ -13,7 +13,9 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\ArtZilla.Net.Config.Core\ArtZilla.Net.Config.Core.csproj" />
 	  <ProjectReference Include="..\ArtZilla.Net.Config.SourceGenerated\ArtZilla.Net.Config.SourceGenerated.csproj" />
-		<ProjectReference Include="..\ArtZilla.Net.Config.Generators\ArtZilla.Net.Conf ig.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\ArtZilla.Net.Config.Generators\ArtZilla.Net.Config.Generators.csproj"
+		                  OutputItemType="Analyzer" 
+		                  ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>

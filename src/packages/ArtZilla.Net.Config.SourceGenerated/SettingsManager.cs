@@ -2,20 +2,36 @@
 
 namespace ArtZilla.Net.Config;
 
+/// Global settings service
 public static class SettingsManager {
-	public static string Company { get; set; }
+	/// Company name
+	public static string Company { get; set; } = null!;
 
-	public static string AppName { get; set; }
+	/// Application name 
+	public static string AppName { get; set; } = null!;
 
-	public static ISettingsProvider Provider { get; }
+	/// Default settings provider
+	public static ISettingsProvider Provider { get; set; } = null!;
 
-	static SettingsManager() {
-		AppName = Assembly.GetExecutingAssembly().GetName().Name ?? AppDomain.CurrentDomain.FriendlyName;
-		Company = "";
-		#if !NETSTANDARD20
-			Provider = JsonFileSettingsProvider.Create(AppName, Company);
-		#else
-			Provider = JsonNetFileSettingsProvider.Create(AppName, Company);
-		#endif
+	static SettingsManager() 
+		=> Init(); // init with default values
+
+	static void Init(string? app = null, string? company = null, ISettingsProvider? provider = null) {
+		AppName = app ?? GetDefaultAppName();
+		Company = company ?? GetDefaultCompany();
+		Provider = provider ?? GetDefaultProvider();
 	}
+
+	static string GetDefaultAppName()
+		=> Assembly.GetExecutingAssembly().GetName().Name ?? AppDomain.CurrentDomain.FriendlyName;
+	
+	static string GetDefaultCompany()
+		=> string.Empty;
+	
+	static ISettingsProvider GetDefaultProvider()
+	#if !NETSTANDARD20
+		=> JsonFileSettingsProvider.Create(AppName, Company);
+	#else
+		=> JsonNetFileSettingsProvider.Create(AppName, Company);
+	#endif
 }
