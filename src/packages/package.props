@@ -11,7 +11,7 @@
     <RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     
-    <Version>0.5.2</Version>
-    <PackageVersion>0.5.2</PackageVersion>
+    <Version>0.5.3</Version>
+    <PackageVersion>0.5.3</PackageVersion>
   </PropertyGroup>
 </Project>

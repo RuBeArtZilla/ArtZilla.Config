@@ -16,7 +16,11 @@ public static class SettingsManager {
 	static SettingsManager() 
 		=> Init(); // init with default values
 
-	static void Init(string? app = null, string? company = null, ISettingsProvider? provider = null) {
+	/// Initialize SettingsManager
+	/// <param name="app">application name</param>
+	/// <param name="company">company name</param>
+	/// <param name="provider">settings provider</param>
+	public static void Init(string? app = null, string? company = null, ISettingsProvider? provider = null) {
 		AppName = app ?? GetDefaultAppName();
 		Company = company ?? GetDefaultCompany();
 		Provider = provider ?? GetDefaultProvider();
