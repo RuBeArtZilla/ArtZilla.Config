@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 namespace ArtZilla.Net.Config.Tests;
-
+						 /*
 public interface ITextConfiguration : IConfiguration {
 	[DefaultValue("Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
 	              + "Pellentesque id mollis neque. Aenean leo augue, ultrices sit amet tincidunt vel, elementum et urna. "
@@ -21,3 +21,4 @@ public interface IInheritedConfiguration : ITextConfiguration {
 public interface IConfigListConfiguration : IConfiguration {
 	IConfigList<string> Items { get; set; }
 }
+*/

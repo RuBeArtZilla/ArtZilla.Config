@@ -2,6 +2,8 @@ using Microsoft.CodeAnalysis;
 
 namespace ArtZilla.Net.Config.Generators;
 
+enum PropKind { Simple, List, Dict, CfgList, CfgDict }
+
 record PropertyToGenerate {
 	public IPropertySymbol Ps;
 	public string Name;
@@ -9,13 +11,14 @@ record PropertyToGenerate {
 	public string TypeName;
 	public AttributeData? Attr;
 	public AttributeKind AttrKind;
-
-	public bool IsIList;
-	public bool IsIConfigList;
+	
+	public PropKind Kind;
+	
 	public ITypeSymbol? ItemType;
+	public ITypeSymbol? KeyType;
 
-	public bool IsCollection
-		=> IsIList || IsIConfigList;
+	public bool IsSimple
+		=> Kind == PropKind.Simple;
 
 	public PropertyToGenerate(IPropertySymbol ps, Cache cache) {
 		Ps = ps;
@@ -35,10 +38,21 @@ record PropertyToGenerate {
 		if (ps.Type is not INamedTypeSymbol pnts)
 			return;
 
-		IsIList = cache.IsIList(pnts.ConstructedFrom);
-		IsIConfigList = cache.IsIConfigList(pnts.ConstructedFrom);
-		if (IsIList || IsIConfigList)
-			ItemType = pnts.TypeArguments[0];
+		Kind = cache.GetKind(pnts.ConstructedFrom);
+
+		switch (Kind) {
+			case PropKind.Simple: break;
+			case PropKind.List:
+			case PropKind.CfgList:
+				ItemType = pnts.TypeArguments[0];
+				break;
+			case PropKind.Dict: 
+			case PropKind.CfgDict: 
+				KeyType = pnts.TypeArguments[0];
+				ItemType = pnts.TypeArguments[1];
+				break;
+			default: throw new ArgumentOutOfRangeException();
+		}
 
 		void SetAttr(AttributeData attr, AttributeKind kind, string propertyName) {
 			ThrowIfMultipleAttributesExist(propertyName);

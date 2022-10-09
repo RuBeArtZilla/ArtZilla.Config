@@ -1,5 +1,12 @@
 ﻿namespace ArtZilla.Net.Config; 
 
+/// Base configuration interface
+public interface IConfiguration {
+	void Copy(IConfiguration source);
+}
+
+/// 
+[Obsolete("Use ISettingsProvider")]
 public interface IConfigurator {
 	///	Remove all <see cref="IConfiguration"/> from this instance
 	void Clear();
@@ -34,46 +41,69 @@ public interface IConfigurator {
 	/// <typeparam name="TConfiguration"></typeparam>
 	/// <returns></returns>
 	TConfiguration Realtime<TConfiguration>() where TConfiguration : class, IConfiguration;
-
+	
+	/// 
 	IConfigurator<TConfiguration> As<TConfiguration>() where TConfiguration : class, IConfiguration;
-
+	
+	/// 
 	IConfigurator<TKey, TConfiguration> As<TKey, TConfiguration>() where TConfiguration : class, IConfiguration;
-
+	
+	/// 
 	IConfiguration[] Get();
-
+	
+	/// 
 	void Set(params IConfiguration[] configurations);
-
+	
+	/// 
 	void CloneTo(IConfigurator destination);
 }
 
-public interface IConfigProvider {
-	bool IsExist();
-	void Reset();
-	void Save(IConfiguration value);
-	IConfiguration GetCopy();
-	INotifyingConfiguration GetNotifying();
-	IReadonlyConfiguration GetReadonly();
-	IRealtimeConfiguration GetRealtime();
-}
-
+/// 
+[Obsolete("Use ISettingsProvider")]
 public interface IConfigurator<TConfiguration> : IConfigProvider where TConfiguration : class, IConfiguration {
+	/// 
 	void Save(TConfiguration value);
+	
+	/// 
 	TConfiguration Copy();
+	
+	/// 
 	TConfiguration Notifying();
+	
+	/// 
 	TConfiguration Readonly();
+	
+	/// 
 	TConfiguration Realtime();
 
+	/// 
 	IConfigurator<TKey, TConfiguration> As<TKey>();
 }
 
+/// 
+[Obsolete("Use ISettingsProvider")]
 public interface IConfigurator<TKey, TConfiguration> : IEnumerable<TConfiguration> where TConfiguration : class, IConfiguration {
+	/// 
 	bool IsExist(TKey key);
+	
+	/// 
 	void Reset(TKey key);
+	
+	/// 
 	void Save(TKey key, TConfiguration value);
+	
+	/// 
 	TConfiguration Copy(TKey key);
+	
+	/// 
 	TConfiguration Notifying(TKey key);
+	
+	/// 
 	TConfiguration Readonly(TKey key);
+	
+	/// 
 	TConfiguration Realtime(TKey key);
-
+	
+	/// 
 	TConfiguration this[TKey key] { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace ArtZilla.Net.Config.Tests.Generators;
+﻿namespace ArtZilla.Net.Config.Tests;
 
 [TestClass]
 public sealed class GeneratorsTests : Core {                 

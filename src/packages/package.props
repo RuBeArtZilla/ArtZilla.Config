@@ -9,9 +9,13 @@
     <PackageTags>ArtZilla;.Net;Configuration Framework</PackageTags>    
     <PackageProjectUrl>https://artzilla.name/ArtZilla.Net.Config/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RuBeArtZilla/ArtZilla.Config</RepositoryUrl>
-    <RepositoryType>Github</RepositoryType>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryBranch>master</RepositoryBranch>
+    <IncludeSource>true</IncludeSource>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     
-    <Version>0.5.3</Version>
-    <PackageVersion>0.5.3</PackageVersion>
+    <Version>0.5.4</Version>
+    <PackageVersion>0.5.4</PackageVersion>
   </PropertyGroup>
 </Project>

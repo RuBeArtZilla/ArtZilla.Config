@@ -30,6 +30,9 @@ record Cache(Compilation Compilation, SourceProductionContext Context) {
 	
 	readonly INamedTypeSymbol _iListInterface 
 		= Compilation.GetIListInterface() ?? throw new("interface IList<T> not found");
+	
+	readonly INamedTypeSymbol _iSettingsDictInterface 
+		= Compilation.GetISettingsDictInterface() ?? throw new("interface ISettingsDict<T1,T2> not found");
 	                               
 	public bool IsDefaultValue(AttributeData attribute) 
 		=> attribute.IsAttribute(_defaultValueAttribute);
@@ -48,6 +51,9 @@ record Cache(Compilation Compilation, SourceProductionContext Context) {
 
 	public bool IsIConfigList(INamedTypeSymbol nts)
 		=> SymbolEqualityComparer.IncludeNullability.Equals(nts, _iConfigListInterface);
+
+	public bool IsISettingsDict(INamedTypeSymbol nts)
+		=> SymbolEqualityComparer.IncludeNullability.Equals(nts, _iSettingsDictInterface);
 	
 	public bool IsInheritIConfigList(INamedTypeSymbol nts) {
 		if (SymbolEqualityComparer.IncludeNullability.Equals(nts.ConstructedFrom, _iConfigListInterface))
@@ -58,5 +64,15 @@ record Cache(Compilation Compilation, SourceProductionContext Context) {
 				return true;
 
 		return false;
+	}
+
+	public PropKind GetKind(INamedTypeSymbol nts) {
+		if (IsIList(nts))
+			return PropKind.List;
+		if (IsIConfigList(nts))
+			return PropKind.CfgList;
+		if (IsISettingsDict(nts))
+			return PropKind.CfgDict;
+		return PropKind.Simple;
 	}
 }

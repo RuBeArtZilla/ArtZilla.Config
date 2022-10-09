@@ -57,9 +57,33 @@ public class TestConfiguration : ITestConfiguration {
 	IList<Hero> _heroes_2 = new ReadOnlyCollection<Hero>(new Hero[0]);
 	IList<Hero> _heroes_3 = new ObservableCollection<Hero>();
 	ulong _uInt64 = DefaultUInt64;
+	
+	ISettingsProvider? _source;
+	string? _sourceKey;
 
-	public void Copy(IConfiguration cfg)
+	/// <inheritdoc />
+	public ISettingsProvider? Source {
+		get => _source;
+		set => _source = value;
+	}
+
+	/// <inheritdoc />
+	public string? SourceKey {
+		get => _sourceKey;
+		set => _sourceKey = value;
+	}
+
+	public void Copy(ISettings cfg)
 		=> Copy((ITestConfiguration)cfg);
+
+	/// <inheritdoc />
+	public Type GetInterfaceType() => typeof(ITestConfiguration);
+
+	/// <inheritdoc />
+	public SettingsKind GetSettingsKind() => SettingsKind.Copy;
+
+	/// <inheritdoc />
+	public string ToJsonString() { throw new NotImplementedException(); }
 
 	public void Copy(ITestConfiguration cfg) {
 		Debug.WriteLine("Copied field value {0}", _uInt64);

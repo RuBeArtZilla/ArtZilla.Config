@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel;
+using ArtZilla.Net.Config.Tests.Generators;
 
-namespace ArtZilla.Net.Config.Tests.Generators; 
+namespace ArtZilla.Net.Config.Tests; 
 
-public interface ITestConfiguration : IConfiguration {
+[GenerateConfiguration]
+public interface ITestConfiguration : ISettings {
 	[DefaultValue(TestConfiguration.DefaultUInt64)] 
 	ulong UInt64 { get; set; }
 

@@ -153,18 +153,18 @@ public class MemoryConfigurator<TConfiguration>
 
 	/// <inheritdoc />
 	public virtual TConfiguration Copy()
-		// => (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get());
-		=> _constructor.CreateCopyOld(Get());
+		=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.CopyType, Get());
+		// => _constructor.CreateCopyOld(Get());
 
 	/// <inheritdoc />
 	public virtual TConfiguration Notifying()
-		// => (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get());
-		=> _constructor.CreateInpcOld(Get());
+		=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.NotifyingType, Get());
+		// => _constructor.CreateInpcOld(Get());
 
 	/// <inheritdoc />
 	public virtual TConfiguration Readonly()
-		// => (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get());
-		=> _constructor.CreateReadOld(Get());
+		=> (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.ReadonlyType, Get());
+		// => _constructor.CreateReadOld(Get());
 
 	/// <inheritdoc />
 	public virtual TConfiguration Realtime()
@@ -188,8 +188,8 @@ public class MemoryConfigurator<TConfiguration>
 		=> CreateDefault();
 
 	protected virtual TConfiguration CreateDefault() {
-		// var cfg = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
-		var cfg = _constructor.CreateRealOld<TConfiguration>();
+		var cfg = (TConfiguration)Activator.CreateInstance(TmpCfgClass<TConfiguration>.RealtimeType);
+		// var cfg = _constructor.CreateRealOld<TConfiguration>();
 		Subscribe(cfg);
 		return cfg;
 	}

@@ -1,3 +1,5 @@
-namespace ArtZilla.Net.Config; 
+namespace ArtZilla.Net.Config;
 
-public class EmptyClassJustForFun { }
+public static class CurrentManager {
+	public static object? Get() => SettingsManager.Provider;
+}

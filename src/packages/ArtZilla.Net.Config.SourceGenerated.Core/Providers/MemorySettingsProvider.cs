@@ -2,113 +2,63 @@ using System.Collections.Concurrent;
 
 namespace ArtZilla.Net.Config;
 
-public abstract class SyncSettingsProviderBase : ISettingsProvider {
-	/// <inheritdoc />
-	public abstract bool IsExist(Type type);
-
-	/// <inheritdoc />
-	public abstract bool Delete(Type type);
-
-	/// <inheritdoc />
-	public abstract void Reset(Type type);
-
-	/// <inheritdoc />
-	public abstract void Flush(Type? type = null);
-
-	/// <inheritdoc />
-	public abstract ISettings Get(Type type, SettingsKind kind);
-
-	/// <inheritdoc />
-	public abstract void Set(ISettings settings);
-
-	/// <inheritdoc />
-	Task<bool> IAsyncSettingsProvider.IsExistAsync(Type type)
-		=> Task.FromResult(IsExist(type));
-
-	/// <inheritdoc />
-	Task<bool> IAsyncSettingsProvider.DeleteAsync(Type type)
-		=> Task.FromResult(Delete(type));
-
-	/// <inheritdoc />
-	Task IAsyncSettingsProvider.ResetAsync(Type? type) {
-		Reset(type);
-		return Task.CompletedTask;
-	}
-
-	/// <inheritdoc />
-	Task IAsyncSettingsProvider.FlushAsync(Type? type) {
-		Flush(type);
-		return Task.CompletedTask;
-	}
-
-	/// <inheritdoc />
-	Task<ISettings> IAsyncSettingsProvider.GetAsync(Type type, SettingsKind kind)
-		=> Task.FromResult(Get(type, kind));
-
-	/// <inheritdoc />
-	Task IAsyncSettingsProvider.SetAsync(ISettings settings) {
-		Set(settings);
-		return Task.CompletedTask;
-	}
-
-	/// <inheritdoc />
-	public abstract void ThrowIfNotSupported(Type type);
-}
-
-
+/// 
 public class MemorySettingsProvider : SyncSettingsProviderBase {
 	/// <inheritdoc cref="ISettingsTypeConstructor"/> 
-	public ISettingsTypeConstructor Constructor { get; }
+	public override ISettingsTypeConstructor Constructor { get; }
 
+	/// 
 	public MemorySettingsProvider()
 		: this(new SameAssemblySettingsTypeConstructor()) { }
 
+	/// 
 	public MemorySettingsProvider(ISettingsTypeConstructor constructor)
 		=> Constructor = constructor;
 
 	/// <inheritdoc />
-	public override bool IsExist(Type type)
-		=> _map.ContainsKey(type);
+	public override bool IsExist(Type type, string? key = null)
+		=> _map.ContainsKey((type, key));
 
 	/// <inheritdoc />
-	public override bool Delete(Type type)
-		=> _map.TryRemove(type, out _);
+	public override bool Delete(Type type, string? key = null)
+		=> _map.TryRemove((type, key), out _);
 
 	/// <inheritdoc />
-	public override void Reset(Type type) 
-		=> Get(type).Copy(Constructor.Create(type, SettingsKind.Read));
+	public override void Reset(Type type, string? key = null) 
+		=> Get(type, key).Copy(Constructor.Create(type, SettingsKind.Read));
 
 	/// <inheritdoc />
-	public override void Flush(Type? type = null) { }
+	public override void Flush(Type? type = null, string? key = null) { }
 
 	/// <inheritdoc />
-	public override ISettings Get(Type type, SettingsKind kind) {
-		var real = Get(type);
+	public override ISettings Get(Type type, SettingsKind kind, string? key = null) {
+		var real = Get(type, key);
 		if (kind == SettingsKind.Real)
 			return real;
 
-		var settings = Constructor.Create(type, kind, Get(type));
+		var settings = Constructor.Create(type, kind, Get(type, key));
 		settings.Source = this;
 		return settings;
 	}
 
 	/// <inheritdoc />
-	public override void Set(ISettings settings)
-		=> Get(settings.GetInterfaceType()).Copy(settings);
+	public override void Set(ISettings settings, string? key = null)
+		=> Get(settings.GetInterfaceType(), key).Copy(settings);
 
 	/// <inheritdoc />
 	public override void ThrowIfNotSupported(Type type) 
-		=> Create(type);
+		=> Create((type, null));
 
-	IRealSettings Get(Type type)
-		=> _map.GetOrAdd(type, Create);
+	IRealSettings Get(Type type, string? key)
+		=> _map.GetOrAdd((type, key), Create);
 
-	IRealSettings Create(Type i) {
-		var settings = Constructor.CreateReal(i);
+	IRealSettings Create((Type Type, string? Key) pair) {
+		var settings = Constructor.CreateReal(pair.Type);
 		settings.Source = this;
+		settings.SourceKey = pair.Key;
 		return settings;
 	}
 
-	readonly ConcurrentDictionary<Type, IRealSettings> _map = new();
+	readonly ConcurrentDictionary<(Type Type, string? Key), IRealSettings> _map = new();
 }
 

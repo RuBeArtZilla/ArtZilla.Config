@@ -23,6 +23,9 @@ static class SourceGenerationHelper {
 	
 	public static INamedTypeSymbol? GetIListInterface(this Compilation compilation)
 		=> compilation.GetTypeByMetadataName("System.Collections.Generic.IList`1");
+	
+	public static INamedTypeSymbol? GetISettingsDictInterface(this Compilation compilation)
+		=> compilation.GetTypeByMetadataName("ArtZilla.Net.Config.ISettingsDict`2");
 
 	public static bool IsAttribute(this AttributeData attributeData, INamedTypeSymbol attributeSymbol)
 		=> attributeSymbol.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default);

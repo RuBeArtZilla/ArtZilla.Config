@@ -11,11 +11,6 @@ public abstract class Core {
 	public const string LongText = "Don't forget, always, somewhere, someone is fighting for you. "
 	                               + "As long as you remember her, you are not alone.";
 
-	public Core() {
-		SettingsManager.AppName = "LibTests";
-		SettingsManager.Company = "AZL";
-	}
-	
 	protected void ChangeConfig(ITestConfiguration cfg) {
 #pragma warning disable CS0618
 		cfg.Int32 = NewInteger;

@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ArtZilla.Net.Config.Tests.Generators;
 
 namespace ArtZilla.Net.Config.Tests;
 
@@ -166,100 +165,46 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 		var actual = await provider.ReadSimpleSettingsAsync();
 		Assert.AreEqual(LongText, actual.Text);
 	}
-}
 
-public abstract class FileSettingsProviderTests<T> : SettingsProviderTest<T> where T : FileSettingsProvider, new() {
-	[TestMethod, Timeout(DefaultTimeout), DoNotParallelize]
-	public async Task SettingsFormatTest() {
-		using var provider = CreateUniqueProvider();
-		var s1 = await provider.RealSimpleSettingsAsync();
-		s1.Text = LongText;
-		var s2 = await provider.RealInheritedSettingsAsync();
-		s2.Value = 3.14f;
-		var s3 = await provider.RealListSettingsAsync();
-		s3.Lines.Insert(1, LongText);
-		var s4 = await provider.RealInitByMethodSettingsAsync();
-		s4.Lines.Insert(1, LongText);
+	[TestMethod, Timeout(DefaultTimeout)]
+	public async Task ByKeyTest() {
+		var provider = CreateUniqueProvider();
+		var s1 = (ISimpleSettings) await provider.GetAsync(typeof(ISimpleSettings), SettingsKind.Real, "Madoka");
+		var s2 = (ISimpleSettings) await provider.GetAsync(typeof(ISimpleSettings), SettingsKind.Real, "Homura");
+		var s3 = await provider.RealSimpleSettingsAsync();
+		
+		Assert.AreEqual(s1.Text, s2.Text);
+
+		s1.Text = "Kaname";
+		s2.Text = "Akemi";
+		s3.Text = "Sayaka Miki";
+		
 		await provider.FlushAsync();
 		
-		Debug.Print("Simple: {0}", await File.ReadAllTextAsync(provider.GetPathToSettings(s1.GetInterfaceType())));
-		Debug.Print("Inherited: {0}", await File.ReadAllTextAsync(provider.GetPathToSettings(s2.GetInterfaceType())));
-		Debug.Print("List: {0}", await File.ReadAllTextAsync(provider.GetPathToSettings(s3.GetInterfaceType())));
-		Debug.Print("Init: {0}", await File.ReadAllTextAsync(provider.GetPathToSettings(s4.GetInterfaceType())));
+		Assert.AreNotEqual(s1.Text, s2.Text);
+		Assert.AreNotEqual(s1.Text, s3.Text);
+		Assert.AreNotEqual(s2.Text, s3.Text);
+
+		if (provider is FileSettingsProvider fsp) {
+			var path1 = fsp.GetPathToSettings(s1.GetInterfaceType(), s1.SourceKey);
+			var path2 = fsp.GetPathToSettings(s2.GetInterfaceType(), s2.SourceKey);
+			var path3 = fsp.GetPathToSettings(s3.GetInterfaceType(), s3.SourceKey);
+			Debug.Print(path1);
+			Debug.Print(path2);
+			Debug.Print(path3);
+			Assert.AreNotEqual(path1, path2);
+			Assert.AreNotEqual(path1, path3);
+			Assert.AreNotEqual(path2, path3);
+			
+			var file1 = await File.ReadAllTextAsync(path1);
+			var file2 = await File.ReadAllTextAsync(path2);
+			var file3 = await File.ReadAllTextAsync(path3);
+			Debug.Print(file1);
+			Debug.Print(file2);
+			Debug.Print(file3);
+			Assert.AreNotEqual(file1, file2);
+			Assert.AreNotEqual(file1, file3);
+			Assert.AreNotEqual(file2, file3);
+		}
 	}
-
-	[TestMethod, Timeout(DefaultTimeout), DoNotParallelize]
-	public async Task SameLocationReadTest() {
-		using var provider = CreateUniqueProvider();
-		var expected = await provider.RealSimpleSettingsAsync();
-		expected.Text = LongText;
-		await expected.FlushAsync();
-
-		using var provider2 = (T)Activator.CreateInstance(typeof(T), provider.Location)!;
-		var actual = await provider2.ReadSimpleSettingsAsync();
-		Assert.AreEqual(LongText, actual.Text);
-	}
-
-	[TestMethod, Timeout(DefaultTimeout), DoNotParallelize]
-	public async Task SameLocationSyncTest() {
-		using var provider = CreateUniqueProvider();
-		using var provider2 = (T)Activator.CreateInstance(typeof(T), provider.Location)!;
-		var expected = await provider.RealSimpleSettingsAsync();
-		var actual = await provider2.RealSimpleSettingsAsync();
-		expected.Text = LongText;
-		await expected.FlushAsync();
-
-		SpinWait.SpinUntil(() => actual.Text == LongText, DefaultTimeout);
-		Assert.AreEqual(LongText, actual.Text);
-	}
-
-	[TestMethod, Timeout(DefaultTimeout), DoNotParallelize]
-	public async Task SameLocationListSyncTest() {
-		using var provider = CreateUniqueProvider();
-		using var provider2 = (T)Activator.CreateInstance(typeof(T), provider.Location)!;
-		var expected = await provider.RealListSettingsAsync();
-		var actual = await provider2.RealListSettingsAsync();
-		expected.Lines.Add("42");
-		expected.Lines.Add("128");
-		expected.Lines.Add(LongText);
-		await expected.FlushAsync();
-
-		SpinWait.SpinUntil(() => actual.Lines.Count == expected.Lines.Count, DefaultTimeout);
-		Debug.Print("Expected: {0}", expected.ToJsonString());
-		Debug.Print("Actual: {0}", actual.ToJsonString());
-		Assert.IsTrue(actual.Lines.SequenceEqual(expected.Lines));
-	}
-}
-
-[TestClass]
-public class MemorySettingsProviderTests : SettingsProviderTest<MemorySettingsProvider> { }
-
-[TestClass]
-public class JsonFileSettingsProviderTests : FileSettingsProviderTests<JsonFileSettingsProvider> {
-	/// <inheritdoc />
-	protected override JsonFileSettingsProvider CreateUniqueProvider(string? name = null)
-		=> new(
-			Path.Combine(
-				Path.GetTempPath(),
-				"tests",
-				nameof(JsonFileSettingsProvider),
-				name!,
-				DateTime.Now.Ticks.ToString("D")
-			)
-		);
-}
-
-[TestClass]
-public class JsonNetFileSettingsProviderTests : FileSettingsProviderTests<JsonNetFileSettingsProvider> {
-	/// <inheritdoc />
-	protected override JsonNetFileSettingsProvider CreateUniqueProvider(string? name = null) 
-		=> new(
-			Path.Combine(
-				Path.GetTempPath(),
-				"tests",
-				nameof(JsonNetFileSettingsProviderTests),
-				name!,
-				DateTime.Now.Ticks.ToString("D")
-			)
-		);
 }
