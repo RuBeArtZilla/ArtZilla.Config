@@ -25,7 +25,4 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<ProjectReference Include="..\..\packages\ArtZilla.Net.Config.Generators\ArtZilla.Net.Config.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
-	<!--
-	-->
-
 </Project>

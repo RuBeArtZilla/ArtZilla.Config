@@ -18,7 +18,5 @@
 		<PackageReference Include="CommunityToolkit.Diagnostics" Version="8.0.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
-		
-	<Import Project="..\..\shared\ArtZilla.Net.Config.SharedFiles\ArtZilla.Net.Config.SharedFiles.projitems" Label="Shared" />
 
 </Project>

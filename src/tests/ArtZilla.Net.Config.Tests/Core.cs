@@ -27,3 +27,13 @@ public abstract class Core {
 #pragma warning restore CS0618
 	}
 }
+
+public static class TestUtils {
+	public static bool TryDispose<T>(this T value) where T : class {
+		if (value is not IDisposable disposable) 
+			return false;
+		
+		disposable.Dispose();
+		return true;
+	}
+}

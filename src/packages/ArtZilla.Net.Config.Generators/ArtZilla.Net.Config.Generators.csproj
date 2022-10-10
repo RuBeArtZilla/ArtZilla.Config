@@ -7,6 +7,7 @@
 		<Summary>Configuration Framework (generators package)</Summary>
 		<Description>Configuration Framework (generators package)</Description>
 		<Nullable>enable</Nullable>
+		<DefineConstants>$(DefineConstants);GENERATOR</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -14,12 +15,19 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.2.0" PrivateAssets="all" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
-		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Include="..\ArtZilla.Net.Config.Core\Extensions\ConfigUtils.cs">
+	    <Link>Imported\ConfigUtils.cs</Link>
+	  </Compile>
+	  <Compile Include="..\ArtZilla.Net.Config.Core\Extensions\SettingsKind.cs">
+	    <Link>Imported\SettingsKind.cs</Link>
+	  </Compile>
+	</ItemGroup>
 
-	<Import Project="..\..\shared\ArtZilla.Net.Config.SharedFiles\ArtZilla.Net.Config.SharedFiles.projitems" 
-	        Label="Shared"/>
 </Project>

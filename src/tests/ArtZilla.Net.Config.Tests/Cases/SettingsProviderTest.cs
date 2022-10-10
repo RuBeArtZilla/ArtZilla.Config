@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace ArtZilla.Net.Config.Tests;
 
-public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider, new() {
+public abstract class SettingsProviderTest<T> : Core where T : class, ISettingsProvider, new() {
 	sealed class ChangesList : List<string>, IDisposable {
 		public ChangesList(IInpcSettings settings) {
 			_settings = settings;
@@ -42,7 +42,7 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 	[TestMethod, Timeout(DefaultTimeout)]
 	public void _IsTypeSupportedTest() {
 		var provider = CreateUniqueProvider();
-		
+
 		provider.ThrowIfNotSupported<ISimpleSettings>();
 		Assert.AreEqual(new SimpleSettings_Read().ToString(), provider.ReadSimpleSettings().ToString());
 		provider.ThrowIfNotSupported<IInheritedSettings>();
@@ -51,6 +51,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 		Assert.AreEqual(new InitByMethodSettings_Read().ToString(), provider.ReadInitByMethodSettings().ToString());
 		provider.ThrowIfNotSupported<IListSettings>();
 		Assert.AreEqual(new ListSettings_Read().ToString(), provider.ReadListSettings().ToString());
+
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -65,6 +67,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 
 		settings.Delete();
 		Assert.IsFalse(settings.IsExist());
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -79,6 +83,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 
 		await settings.DeleteAsync();
 		Assert.IsFalse(await settings.IsExistAsync());
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -86,6 +92,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 		var provider = CreateUniqueProvider();
 		var settings = provider.ReadSimpleSettings();
 		Assert.ThrowsException<Exception>(() => settings.Text = "readonly property");
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -102,6 +110,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 		SpinWait.SpinUntil(() => changed.Count == expectedChangeCount, TimeSpan.FromSeconds(5D));
 		Assert.AreEqual(expectedChangeCount, changed.Count);
 		Assert.IsTrue(changed.All(i => i == nameof(ISimpleSettings.Text)));
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -118,6 +128,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 		SpinWait.SpinUntil(() => changed.Count == expectedChangeCount, TimeSpan.FromSeconds(5D));
 		Assert.AreEqual(expectedChangeCount, changed.Count);
 		Assert.IsTrue(changed.All(i => i == nameof(IListSettings.Lines)));
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -135,6 +147,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 		SpinWait.SpinUntil(() => changed.Count == expectedChangeCount, TimeSpan.FromSeconds(5D));
 		Assert.AreEqual(expectedChangeCount, changed.Count);
 		Assert.IsTrue(changed.All(i => i == nameof(ISimpleSettings.Text)));
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -153,6 +167,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 
 		await settings.ResetAsync();
 		Assert.IsTrue(changed.Count > expectedChangeCount);
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -164,6 +180,8 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 
 		var actual = await provider.ReadSimpleSettingsAsync();
 		Assert.AreEqual(LongText, actual.Text);
+		
+		provider.TryDispose();
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -206,5 +224,7 @@ public abstract class SettingsProviderTest<T> : Core where T : ISettingsProvider
 			Assert.AreNotEqual(file1, file3);
 			Assert.AreNotEqual(file2, file3);
 		}
+		
+		provider.TryDispose();
 	}
 }
