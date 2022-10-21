@@ -4,16 +4,12 @@ namespace ArtZilla.Net.Config;
 
 /// 
 public class MemorySettingsProvider : SyncSettingsProviderBase {
-	/// <inheritdoc cref="ISettingsTypeConstructor"/> 
-	public override ISettingsTypeConstructor Constructor { get; }
-
 	/// 
-	public MemorySettingsProvider()
-		: this(new SameAssemblySettingsTypeConstructor()) { }
+	public MemorySettingsProvider() { }
 
 	/// 
 	public MemorySettingsProvider(ISettingsTypeConstructor constructor)
-		=> Constructor = constructor;
+		: base(constructor) { }
 
 	/// <inheritdoc />
 	public override bool IsExist(Type type, string? key = null)
@@ -25,39 +21,29 @@ public class MemorySettingsProvider : SyncSettingsProviderBase {
 
 	/// <inheritdoc />
 	public override void Reset(Type type, string? key = null) 
-		=> Get(type, key).Copy(Constructor.Create(type, SettingsKind.Read));
+		=> Get(type, key).Copy(GetDefault(type, SettingsKind.Read));
 
 	/// <inheritdoc />
 	public override void Flush(Type? type = null, string? key = null) { }
 
 	/// <inheritdoc />
 	public override ISettings Get(Type type, SettingsKind kind, string? key = null) {
-		var real = Get(type, key);
-		if (kind == SettingsKind.Real)
-			return real;
+		var settings = Get(type, key);
+		return kind == SettingsKind.Real
+			? settings
+			: Constructor.Clone(settings, kind);
 
-		var settings = Constructor.Create(type, kind, Get(type, key));
-		settings.Source = this;
-		return settings;
 	}
 
 	/// <inheritdoc />
 	public override void Set(ISettings settings, string? key = null)
 		=> Get(settings.GetInterfaceType(), key).Copy(settings);
-
-	/// <inheritdoc />
-	public override void ThrowIfNotSupported(Type type) 
-		=> Create((type, null));
-
+	
 	IRealSettings Get(Type type, string? key)
 		=> _map.GetOrAdd((type, key), Create);
 
-	IRealSettings Create((Type Type, string? Key) pair) {
-		var settings = Constructor.CreateReal(pair.Type);
-		settings.Source = this;
-		settings.SourceKey = pair.Key;
-		return settings;
-	}
+	IRealSettings Create((Type Type, string? Key) pair)
+		=> Constructor.DefaultReal(pair.Type, this, pair.Key);
 
 	readonly ConcurrentDictionary<(Type Type, string? Key), IRealSettings> _map = new();
 }

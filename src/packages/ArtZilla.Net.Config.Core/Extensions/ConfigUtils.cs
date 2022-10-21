@@ -108,4 +108,9 @@ static class ConfigUtils {
 	/// <returns></returns>
 	public static string GenerateRealTypeNameFromClassPrefix(string className)
 		=> className + "_Real";
+
+	#if NETSTANDARD2_0
+	public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> pair, out TKey key, out TValue value)
+		=> (key, value) = (pair.Key, pair.Value);
+	#endif
 }

@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace ArtZilla.Net.Config.Generators;
 
+///
 [Generator]
 public class ConfigurationsGenerator : IIncrementalGenerator {
 	/// <inheritdoc />
@@ -30,20 +31,20 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 		GeneratorSyntaxContext context,
 		CancellationToken token
 	) {
-		var ids = (InterfaceDeclarationSyntax)context.Node;
+		var ids = (InterfaceDeclarationSyntax) context.Node;
 		var sm = context.SemanticModel;
 		foreach (var attributes in ids.AttributeLists)
-			foreach (var attributeSyntax in attributes.Attributes) {
-				if (sm.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-					continue;
+		foreach (var attributeSyntax in attributes.Attributes) {
+			if (sm.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+				continue;
 
-				var attributeContainingTypeSymbol = attributeSymbol.ContainingType;
-				var fullName = attributeContainingTypeSymbol.ToDisplayString();
-				if (fullName != "ArtZilla.Net.Config.GenerateConfigurationAttribute")
-					continue;
+			var attributeContainingTypeSymbol = attributeSymbol.ContainingType;
+			var fullName = attributeContainingTypeSymbol.ToDisplayString();
+			if (fullName != "ArtZilla.Net.Config.GenerateConfigurationAttribute")
+				continue;
 
-				return ids;
-			}
+			return ids;
+		}
 
 		return null;
 	}
@@ -158,11 +159,11 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 
 		MakeBaseClass(cache, sb.AppendLine(), itg);
 		MakeInpcBaseClass(cache, sb.AppendLine(), itg);
-		MakeCopyClass(cache, sb.AppendLine(), itg);
-		MakeReadClass(cache, sb.AppendLine(), itg);
-		MakeInpcClass(cache, sb.AppendLine(), itg);
-		MakeRealClass(cache, sb.AppendLine(), itg);
-		MakeExtensionsClass(cache, sb.AppendLine(), itg);
+		MakeCopyClass(sb.AppendLine(), itg);
+		MakeReadClass(sb.AppendLine(), itg);
+		MakeInpcClass(sb.AppendLine(), itg);
+		MakeRealClass(sb.AppendLine(), itg);
+		MakeExtensionsClass(sb.AppendLine(), itg);
 		cache.Processed.Add(itg);
 	}
 
@@ -184,16 +185,16 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 				break;
 			case PropKind.Dict:
 				throw new NotImplementedException("IDictionary properties not implemented");
-			case PropKind.CfgList: 
+			case PropKind.CfgList:
 				PrintIConfigListPropertyDefinition(sb, itg, prop);
 				break;
-			case PropKind.CfgDict: 
+			case PropKind.CfgDict:
 				PrintISettingsDictPropertyDefinition(sb, itg, prop);
 				break;
-			default: 
+			default:
 				throw new ArgumentOutOfRangeException();
 		}
-		
+
 		sb.AppendLine();
 	}
 
@@ -204,7 +205,7 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 
 	static void PrintISettingsDictPropertyDefinition(StringBuilder sb, InterfaceToGenerate itg, PropertyToGenerate prop)
 		=> sb
-			.AppendLine(1, "[System.Runtime.Serialization.DataMemberAttribute]")
+			.AppendLine(1, "[System.Runtime.Serialization.DataMember(Name = \"{0}\")]", prop.Name)
 			.AppendLine(1, "[System.Xml.Serialization.XmlArray(\"{0}\")]", prop.Name)
 			.AppendLine(1, "[System.Xml.Serialization.XmlArrayItem(\"{0}\")]", prop.ItemType)
 			.AppendLine(1, "#if !NETSTANDARD2_0")
@@ -212,7 +213,7 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 			.AppendLine(1, "#endif")
 			.AppendLine(1, "public {0}[] __{1} {{", prop.KeyType, prop.Name)
 			.AppendLine(2, "get => {0}.Keys.ToArray();", prop.Name)
-			.AppendLine(2, "set => throw new(\"todo\");", prop.FieldName)
+			.AppendLine(2, "set => {0}.SetKeys(value);", prop.FieldName)
 			.AppendLine(1, "}")
 			.AppendLine()
 			.AppendLine(1, "#if !NETSTANDARD2_0")
@@ -292,15 +293,15 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 				case PropKind.Simple:
 					sb.AppendLine(2, "set => Set(ref {0}, value);", prop.FieldName);
 					break;
-				case PropKind.List: 
-				case PropKind.Dict: 
+				case PropKind.List:
+				case PropKind.Dict:
 				case PropKind.CfgList:
-				case PropKind.CfgDict: 
+				case PropKind.CfgDict:
 					sb.AppendLine(2, "set => {0}.Set(value);", prop.FieldName);
 					break;
 				default: throw new ArgumentOutOfRangeException();
 			}
-			
+
 			sb.AppendLine(1, "}");
 			sb.AppendLine();
 		}
@@ -319,7 +320,7 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 			sb.AppendLine();
 		}
 	}
-	
+
 	static void PrintFieldsDefinition(StringBuilder sb, InterfaceToGenerate itg, bool isRead, bool isInpc) {
 		foreach (var prop in itg.Properties) {
 			sb.Indent(1);
@@ -328,15 +329,33 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 				sb.Append("readonly ");
 
 			switch (prop.Kind, isInpc) {
-				case (PropKind.List, false): sb.AppendFormat("List<{0}>", prop.ItemType); break;
-				case (PropKind.List, true): sb.AppendFormat("InpcConfigList<{0}>", prop.ItemType); break;
-				case (PropKind.CfgList, false): sb.AppendFormat("cfg::ConfigList<{0}>", prop.ItemType); break;
-				case (PropKind.CfgList, true): sb.AppendFormat("cfg::InpcConfigList<{0}>", prop.ItemType); break;
-				case (PropKind.Dict, false): sb.AppendFormat("Dictionary<{0}, {1}>", prop.KeyType, prop.ItemType); break;
-				case (PropKind.Dict, true): sb.AppendFormat("Dictionary<{0}, {1}>", prop.KeyType, prop.ItemType); break; // todo
-				case (PropKind.CfgDict, false): sb.AppendFormat("cfg::SettingsDict<{0}, {1}>", prop.KeyType, prop.ItemType); break;
-				case (PropKind.CfgDict, true): sb.AppendFormat("cfg::InpcSettingsDict<{0}, {1}>", prop.KeyType, prop.ItemType); break;
-				default: sb.Append(prop.TypeName); break;
+				case (PropKind.List, false):
+					sb.AppendFormat("List<{0}>", prop.ItemType);
+					break;
+				case (PropKind.List, true):
+					sb.AppendFormat("InpcConfigList<{0}>", prop.ItemType);
+					break;
+				case (PropKind.CfgList, false):
+					sb.AppendFormat("cfg::ConfigList<{0}>", prop.ItemType);
+					break;
+				case (PropKind.CfgList, true):
+					sb.AppendFormat("cfg::InpcConfigList<{0}>", prop.ItemType);
+					break;
+				case (PropKind.Dict, false):
+					sb.AppendFormat("Dictionary<{0}, {1}>", prop.KeyType, prop.ItemType);
+					break;
+				case (PropKind.Dict, true):
+					sb.AppendFormat("Dictionary<{0}, {1}>", prop.KeyType, prop.ItemType);
+					break; // todo
+				case (PropKind.CfgDict, false):
+					sb.AppendFormat("cfg::SettingsDict<{0}, {1}>", prop.KeyType, prop.ItemType);
+					break;
+				case (PropKind.CfgDict, true):
+					sb.AppendFormat("cfg::InpcSettingsDict<{0}, {1}>", prop.KeyType, prop.ItemType);
+					break;
+				default:
+					sb.Append(prop.TypeName);
+					break;
 			}
 
 			sb.Append(" ")
@@ -347,19 +366,169 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 
 	static void AppendEmptyDefaultCtor(StringBuilder sb, string className)
 		=> sb.AppendLine(1, "public {0}() {{ }}", className);
+							
+	static void AppendEmptyDefaultCtorFullX(StringBuilder sb, string className)
+		=> sb.AppendLine(1, "public {0}(cfg::ISettingsProvider? sp, string? key) : base(true, sp, key) {{ }}", className);
 
-	static void AppendDefaultCtor(StringBuilder sb, InterfaceToGenerate itg, string className, bool isInpc) {
+	static void AppendEmptyDefaultCtorFull(StringBuilder sb, string className)
+		=> sb.AppendLine(1, "public {0}(bool isInitFields, cfg::ISettingsProvider? sp = null, string? key = null) : base(isInitFields, sp, key) {{ }}", className);
+	
+	static void AppendDefaultCtor(StringBuilder sb, string className) => sb
+		.AppendInheritdoc(1)
+		.AppendLine(1, "public {0}() : this(isInitFields: false) {{ }}", className);
+
+	static void AppendNoInitCtorX(StringBuilder sb, string className) => sb
+		.AppendInheritdoc(1)
+		.AppendLine(1, "public {0}(bool isInitFields) : this(isInitFields, null, null) {{ }}", className);
+	
+	static void AppendNoInitCtorFull(StringBuilder sb, InterfaceToGenerate itg, string className, bool isInpc) {
 		sb.AppendInheritdoc(1);
-		sb.AppendLine(1, "public {0}() {{", className);
-
-		var props = itg.Properties;
-		foreach (var prop in props) 
-			AppendDefaultCtorProperty(sb, itg, prop, false, isInpc);
-
+		sb.AppendLine(1, "public {0}(bool isInitFields, cfg::ISettingsProvider? sp = null, string? key = null) : base(sp, key) {{", className);
+		AppendDefaultCtorProperties(sb, itg, false, isInpc);
+		sb.AppendLine(2, "if (!isInitFields)");
+		sb.AppendLine(3, "return;");
+		AppendInitCtorProperties(sb, itg);
 		sb.AppendLine(1, "} // default ctor");
 	}
 
-	static void AppendDefaultCtorProperty(StringBuilder sb, InterfaceToGenerate itg, PropertyToGenerate prop, bool isRead, bool isInpc) {
+	static void AppendInitCtorProperties(StringBuilder sb, InterfaceToGenerate itg) {
+		foreach (var prop in itg.Properties)
+			AppendInitCtorProperty(sb, itg, prop);
+	}
+
+	static void AppendInitCtorProperty(
+		StringBuilder sb,
+		InterfaceToGenerate itg,
+		PropertyToGenerate prop
+	) {
+		if (prop.Attr is not { } attr)
+			return;
+
+		switch (prop.AttrKind) {
+			case PropertyToGenerate.AttributeKind.Const: {
+				sb.Indent(2).Append(prop.FieldName).Append(" = ");
+				var value = attr.ConstructorArguments.First().ToCSharpString();
+				sb.Append(value);
+				if (prop.TypeName == "float" || prop.TypeName == "float?" && char.IsDigit(value.Last()))
+					sb.Append("f");
+				sb.AppendLine(";");
+				break;
+			}
+
+			case PropertyToGenerate.AttributeKind.Ctor: {
+				sb.Indent(2).Append(prop.FieldName).Append(" = ");
+				var args = attr.ConstructorArguments;
+				var type = args[0];
+				sb.Append("new ");
+				sb.Append(type.Value);
+				sb.Append("(");
+				if (args.Length == 2) {
+					var a = args[1];
+					for (var i = 0; i < a.Values.Length; i++) {
+						if (i != 0)
+							sb.Append(", ");
+						var value = a.Values[i];
+						sb.Append(value.ToCSharpString());
+					}
+				}
+
+				sb.AppendLine(");");
+				break;
+			}
+
+			case PropertyToGenerate.AttributeKind.Method: {
+				var args = attr.ConstructorArguments;
+				var type = args[0].Value;
+				var methodName = args[1].Value?.ToString() ?? "";
+				var extraArgs = args[2].Values;
+
+				if (type is not INamedTypeSymbol nts)
+					throw new($"Error with attribute of property {prop.Name}");
+
+				var members = nts.GetMembers(methodName);
+				if (members.Length == 0)
+					throw new($"Method {methodName} not found in type {nts.Name}");
+
+				var isMethodFound = false;
+				foreach (var member in members) {
+					if (member is not IMethodSymbol ms)
+						continue;
+
+					var methodArgs = ms.Parameters;
+					if (ms.ReturnsVoid) {
+						if (methodArgs.Length - 1 != extraArgs.Length)
+							continue;
+
+						var arg0 = methodArgs[0];
+						var typeName = type.ToString();
+						if (typeName.StartsWith(itg.Namespace, StringComparison.OrdinalIgnoreCase))
+							typeName = typeName.Substring(itg.Namespace.Length + 1);
+
+						sb.Indent(2);
+						sb.Append(typeName);
+						sb.Append(".");
+						sb.Append(methodName);
+						sb.Append("(");
+						sb.Append(
+							arg0.RefKind switch {
+								RefKind.Out => "out ",
+								RefKind.Ref => "ref ",
+								_ => "",
+							}
+						);
+						sb.Append(prop.FieldName);
+						foreach (var value in extraArgs)
+							sb.Append(", ").Append(value.ToCSharpString());
+						sb.AppendLine(");");
+						isMethodFound = true;
+						break;
+					} else {
+						var typeName = type.ToString();
+						if (typeName.StartsWith(itg.Namespace, StringComparison.OrdinalIgnoreCase))
+							typeName = typeName.Substring(itg.Namespace.Length + 1);
+
+						sb.Indent(2);
+						sb.Append(prop.FieldName);
+						sb.Append(" = ");
+						sb.Append(typeName);
+						sb.Append(".");
+						sb.Append(methodName);
+						sb.Append("(");
+						for (var i = 0; i < extraArgs.Length; i++) {
+							var value = extraArgs[i];
+							if (i > 0)
+								sb.Append(", ");
+							sb.Append(value.ToCSharpString());
+						}
+
+						sb.AppendLine(");");
+						isMethodFound = true;
+						break;
+					}
+				}
+
+				if (!isMethodFound)
+					throw new($"Method {methodName} not found in type {nts.Name}");
+				break;
+			}
+
+			default:
+				throw new ArgumentOutOfRangeException();
+		}
+	}
+
+	static void AppendDefaultCtorProperties(StringBuilder sb, InterfaceToGenerate itg, bool isRead, bool isInpc) {
+		foreach (var prop in itg.Properties)
+			AppendDefaultCtorProperty(sb, itg, prop, false, isInpc);
+	}
+
+	static void AppendDefaultCtorProperty(
+		StringBuilder sb,
+		InterfaceToGenerate itg,
+		PropertyToGenerate prop,
+		bool isRead,
+		bool isInpc
+	) {
 		var attr = prop.Attr;
 		if (attr is null || prop.AttrKind != PropertyToGenerate.AttributeKind.Ctor)
 			switch (prop.Kind, isInpc) {
@@ -369,152 +538,58 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 				case (PropKind.List, false):
 					sb.AppendLine(2, "{0} = new();", prop.FieldName);
 					break;
-				case (PropKind.Dict, false): 
+				case (PropKind.Dict, false):
 					sb.AppendLine(2, "{0} = new();", prop.FieldName);
 					break;
-				case (PropKind.CfgList, false): 
+				case (PropKind.CfgList, false):
 					sb.AppendLine(2, "{0} = new();", prop.FieldName);
 					break;
 				case (PropKind.List, true):
-				case (PropKind.CfgList, true): 
+				case (PropKind.CfgList, true):
 					sb.AppendLine(2, "{0} = new(this, nameof({1}));", prop.FieldName, prop.Name);
 					break;
-				case (PropKind.CfgDict, false): 
+				case (PropKind.CfgDict, false):
 					sb.AppendLine(2, "{0} = new(this);", prop.FieldName);
 					break;
-				case (PropKind.Dict, true): 
-				case (PropKind.CfgDict, true): 
+				case (PropKind.Dict, true):
+				case (PropKind.CfgDict, true):
 					sb.AppendLine(2, "{0} = new(this, nameof({1}));", prop.FieldName, prop.Name);
 					break;
 				default: throw new ArgumentOutOfRangeException();
 			}
-	
-		if (attr is not null)
-			switch (prop.AttrKind) {
-				case PropertyToGenerate.AttributeKind.Const: {
-					sb.Indent(2).Append(prop.FieldName).Append(" = ");
-					var value = attr.ConstructorArguments.First().ToCSharpString();
-					sb.Append(value);
-					if (prop.TypeName == "float" || prop.TypeName == "float?" && char.IsDigit(value.Last()))
-						sb.Append("f");
-					sb.AppendLine(";");
-					break;
-				}
 
-				case PropertyToGenerate.AttributeKind.Ctor: {
-					sb.Indent(2).Append(prop.FieldName).Append(" = ");
-					var args = attr.ConstructorArguments;
-					var type = args[0];
-					sb.Append("new ");
-					sb.Append(type.Value);
-					sb.Append("(");
-					if (args.Length == 2) {
-						var a = args[1];
-						for (var i = 0; i < a.Values.Length; i++) {
-							if (i != 0)
-								sb.Append(", ");
-							var value = a.Values[i];
-							sb.Append(value.ToCSharpString());
-						}
-					}
-
-					sb.AppendLine(");");
-					break;
-				}
-
-				case PropertyToGenerate.AttributeKind.Method: {
-					var args = attr.ConstructorArguments;
-					var type = args[0].Value;
-					var methodName = args[1].Value?.ToString() ?? "";
-					var extraArgs = args[2].Values;
-
-					if (type is not INamedTypeSymbol nts)
-						throw new($"Error with attribute of property {prop.Name}");
-
-					var members = nts.GetMembers(methodName);
-					if (members.Length == 0)
-						throw new($"Method {methodName} not found in type {nts.Name}");
-
-					var isMethodFound = false;
-					foreach (var member in members) {
-						if (member is not IMethodSymbol ms)
-							continue;
-
-						var methodArgs = ms.Parameters;
-						if (ms.ReturnsVoid) {
-							if (methodArgs.Length - 1 != extraArgs.Length)
-								continue;
-
-							var arg0 = methodArgs[0];
-							var typeName = type.ToString();
-							if (typeName.StartsWith(itg.Namespace, StringComparison.OrdinalIgnoreCase))
-								typeName = typeName.Substring(itg.Namespace.Length + 1);
-
-							sb.Indent(2);
-							sb.Append(typeName);
-							sb.Append(".");
-							sb.Append(methodName);
-							sb.Append("(");
-							sb.Append(
-								arg0.RefKind switch {
-									RefKind.Out => "out ",
-									RefKind.Ref => "ref ",
-									_ => "",
-								}
-							);
-							sb.Append(prop.FieldName);
-							foreach (var value in extraArgs)
-								sb.Append(", ").Append(value.ToCSharpString());
-							sb.AppendLine(");");
-							isMethodFound = true;
-							break;
-						} else {
-							var typeName = type.ToString();
-							if (typeName.StartsWith(itg.Namespace, StringComparison.OrdinalIgnoreCase))
-								typeName = typeName.Substring(itg.Namespace.Length + 1);
-
-							sb.Indent(2);
-							sb.Append(prop.FieldName);
-							sb.Append(" = ");
-							sb.Append(typeName);
-							sb.Append(".");
-							sb.Append(methodName);
-							sb.Append("(");
-							for (var i = 0; i < extraArgs.Length; i++) {
-								var value = extraArgs[i];
-								if (i > 0)
-									sb.Append(", ");
-								sb.Append(value.ToCSharpString());
-							}
-
-							sb.AppendLine(");");
-							isMethodFound = true;
-							break;
-						}
-					}
-
-					if (!isMethodFound)
-						throw new($"Method {methodName} not found in type {nts.Name}");
-					break;
-				}
-
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+		return;
 	}
 
-	static void AppendInheritedCopyCtor(StringBuilder sb, InterfaceToGenerate itg, string className)
+	static void AppendInheritedCopyCtorX(StringBuilder sb, InterfaceToGenerate itg, string className)
 		=> sb.AppendLine(1, "public {0}({1} source) : base(source) {{ }}", className, itg.InterfaceName);
+																																																		 
+	static void AppendInheritedCopyCtorFull(StringBuilder sb, InterfaceToGenerate itg, string className)
+		=> sb.AppendLine(1, "public {0}({1} source, cfg::ISettingsProvider? sp = null, string? key = null) : base(source, sp, key) {{ }}", className, itg.InterfaceName);
 
-	static void AppendCopyCtor(StringBuilder sb, InterfaceToGenerate itg, string className, bool isRead, bool isInpc) {
+	static void AppendCopyCtorX(StringBuilder sb, InterfaceToGenerate itg, string className, bool isRead, bool isInpc) {
 		sb.AppendInheritdoc(1);
 		sb.AppendLine(1, "public {0}({1} source) {{", className, itg.InterfaceName);
 		foreach (var property in itg.Properties)
 			AppendCopyCtorProperty(sb, itg, property, isRead, isInpc);
 		sb.AppendLine(1, "} // copy ctor");
 	}
+	
+	static void AppendCopyCtorFull(StringBuilder sb, InterfaceToGenerate itg, string className, bool isRead, bool isInpc) {
+		sb.AppendInheritdoc(1);
+		sb.AppendLine(1, "public {0}({1} source, cfg::ISettingsProvider? sp = null, string? key = null) : base(sp, key) {{", className, itg.InterfaceName);
+		foreach (var property in itg.Properties)
+			AppendCopyCtorProperty(sb, itg, property, isRead, isInpc);
+		sb.AppendLine(1, "} // copy ctor");
+	}
 
-	static void AppendCopyCtorProperty(StringBuilder sb, InterfaceToGenerate itg, PropertyToGenerate prop, bool isRead, bool isInpc) {
+	static void AppendCopyCtorProperty(
+		StringBuilder sb,
+		InterfaceToGenerate itg,
+		PropertyToGenerate prop,
+		bool isRead,
+		bool isInpc
+	) {
 		switch ((prop.Kind, isInpc)) {
 			case (PropKind.List, false):
 			case (PropKind.CfgList, false):
@@ -532,7 +607,7 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 				break;
 			case (PropKind.Simple, _):
 			default:
-				sb.AppendLine(2, "{0} = source.{1};", prop.FieldName, prop.Name);	
+				sb.AppendLine(2, "{0} = source.{1};", prop.FieldName, prop.Name);
 				break;
 		}
 	}
@@ -555,12 +630,13 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 		.AppendLine(1, "public void Copy({0} source)", itg.InterfaceName)
 		.AppendLine(2, "=> ThrowReadonlyException();");
 
-	static void AppendThrowReadonlyExceptionMethod(StringBuilder sb) => sb
-		.AppendLine("#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER")
-		.AppendLine(1, "[System.Diagnostics.CodeAnalysis.DoesNotReturn]")
-		.AppendLine("#endif")
-		.AppendLine(1, "static void ThrowReadonlyException()")
-		.AppendLine(2, "=> throw new System.Exception(\"Can't modify readonly configuration\");");
+	static void AppendThrowReadonlyExceptionMethod(StringBuilder sb)
+		=> sb
+			.AppendLine("#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER")
+			.AppendLine(1, "[System.Diagnostics.CodeAnalysis.DoesNotReturn]")
+			.AppendLine("#endif")
+			.AppendLine(1, "static void ThrowReadonlyException()")
+			.AppendLine(2, "=> throw new System.Exception(\"Can't modify readonly configuration\");");
 
 	static void MakeBaseClass(Cache _, StringBuilder sb, InterfaceToGenerate itg) => sb
 		.AppendClassComment("BASE CLASS")
@@ -569,6 +645,11 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 		.AppendClassBodyBegin()
 		.AppendInheritdoc(1)
 		.AppendLine(1, "public override Type GetInterfaceType() => typeof({0});", itg.InterfaceName)
+		.AppendLine()
+		.AppendLine(1, "public {0}() {{ }}", itg.BaseClassName)
+		.AppendLine()
+		.AppendLine(1, "public {0}(cfg::ISettingsProvider? source, string? key)", itg.BaseClassName)
+		.AppendLine(2, ": base(source, key) { }")
 		.AppendClassBodyEnd(itg.BaseClassName);
 
 	static void MakeInpcBaseClass(Cache _, StringBuilder sb, InterfaceToGenerate itg) => sb
@@ -578,28 +659,39 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 		.AppendClassBodyBegin()
 		.AppendInheritdoc(1)
 		.AppendLine(1, "public override Type GetInterfaceType() => typeof({0});", itg.InterfaceName)
+		.AppendLine()
+		.AppendLine(1, "public {0}() {{ }}", itg.InpcBaseClassName)
+		.AppendLine()
+		.AppendLine(1, "public {0}(cfg::ISettingsProvider? source, string? key)", itg.InpcBaseClassName)
+		.AppendLine(2, ": base(source, key) { }")
 		.AppendClassBodyEnd(itg.InpcBaseClassName);
 
-	static void MakeCopyClass(Cache cache, StringBuilder sb, InterfaceToGenerate itg) {
+	static void MakeCopyClass(StringBuilder sb, InterfaceToGenerate itg) {
 		sb.AppendClassComment("RECORD IMPLEMENTATION");
 		itg.AppendCopyClassDefinition(sb);
 		PrintPropertiesDefinition(sb, itg);
 		PrintFieldsDefinition(sb, itg, false, false);
-		AppendDefaultCtor(sb.AppendLine(), itg, itg.CopyClassName, false);
-		AppendCopyCtor(sb.AppendLine(), itg, itg.CopyClassName, false, false);
+		AppendDefaultCtor(sb.AppendLine(), itg.CopyClassName);
+		// AppendNoInitCtor(sb.AppendLine(), itg.CopyClassName);
+		AppendNoInitCtorFull(sb.AppendLine(), itg, itg.CopyClassName, false);
+		// AppendCopyCtor(sb.AppendLine(), itg, itg.CopyClassName, false, false);
+		AppendCopyCtorFull(sb.AppendLine(), itg, itg.CopyClassName, false, false);
 		AppendUntypedCopyMethod(sb.AppendLine(), itg);
 		AppendTypedCopyMethod(sb.AppendLine(), itg);
 		sb.AppendLine().AppendSettingsKind(1, SettingsKind.Copy);
 		sb.AppendClassBodyEnd(itg.CopyClassName);
 	}
 
-	static void MakeReadClass(Cache cache, StringBuilder sb, InterfaceToGenerate itg) {
+	static void MakeReadClass(StringBuilder sb, InterfaceToGenerate itg) {
 		sb.AppendClassComment("READONLY IMPLEMENTATION");
 		itg.AppendReadClassDefinition(sb);
 		PrintReadonlyPropertiesDefinition(sb, itg);
 		PrintFieldsDefinition(sb, itg, true, false);
-		AppendDefaultCtor(sb.AppendLine(), itg, itg.ReadClassName, false);
-		AppendCopyCtor(sb.AppendLine(), itg, itg.ReadClassName, true, false);
+		AppendDefaultCtor(sb.AppendLine(), itg.ReadClassName);
+		// AppendNoInitCtor(sb.AppendLine(), itg.ReadClassName);
+		AppendNoInitCtorFull(sb.AppendLine(), itg, itg.ReadClassName, false);
+		// AppendCopyCtor(sb.AppendLine(), itg, itg.ReadClassName, true, false);
+		AppendCopyCtorFull(sb.AppendLine(), itg, itg.ReadClassName, true, false);
 		AppendUntypedCopyMethod(sb.AppendLine(), itg);
 		AppendReadonlyTypedCopyMethod(sb.AppendLine(), itg);
 		AppendThrowReadonlyExceptionMethod(sb.AppendLine());
@@ -607,44 +699,61 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 		sb.AppendClassBodyEnd(itg.ReadClassName);
 	}
 
-	static void MakeInpcClass(Cache cache, StringBuilder sb, InterfaceToGenerate itg) {
+	static void MakeInpcClass(StringBuilder sb, InterfaceToGenerate itg) {
 		sb.AppendClassComment("INPC IMPLEMENTATION");
 		itg.AppendInpcClassDefinition(sb);
 		PrintInpcPropertiesDefinition(sb, itg);
 		PrintFieldsDefinition(sb, itg, false, true);
-		AppendDefaultCtor(sb.AppendLine(), itg, itg.InpcClassName, true);
-		AppendCopyCtor(sb.AppendLine(), itg, itg.InpcClassName, false, true);
+		AppendDefaultCtor(sb.AppendLine(), itg.InpcClassName);
+		// AppendNoInitCtor(sb.AppendLine(), itg.InpcClassName);
+		AppendNoInitCtorFull(sb.AppendLine(), itg, itg.InpcClassName, true);
+		// AppendCopyCtor(sb.AppendLine(), itg, itg.InpcClassName, false, true);
+		AppendCopyCtorFull(sb.AppendLine(), itg, itg.InpcClassName, false, true);
 		AppendUntypedCopyMethod(sb.AppendLine(), itg);
 		AppendTypedCopyMethod(sb.AppendLine(), itg);
 		sb.AppendLine().AppendSettingsKind(1, SettingsKind.Inpc);
 		sb.AppendClassBodyEnd(itg.InpcClassName);
 	}
 
-	static void MakeRealClass(Cache _, StringBuilder sb, InterfaceToGenerate itg) {
+	static void MakeRealClass(StringBuilder sb, InterfaceToGenerate itg) {
 		sb.AppendClassComment("REAL IMPLEMENTATION");
 		itg.AppendRealClassDefinition(sb);
-		AppendEmptyDefaultCtor(sb, itg.RealClassName);
-		AppendInheritedCopyCtor(sb, itg, itg.RealClassName);
+		AppendDefaultCtor(sb, itg.RealClassName);
+		AppendEmptyDefaultCtorFull(sb, itg.RealClassName);
+		// AppendEmptyDefaultCtorFull(sb, itg.RealClassName);
+		// AppendNoInitCtor(sb, itg.RealClassName);
+		// AppendInheritedCopyCtor(sb, itg, itg.RealClassName);
+		AppendInheritedCopyCtorFull(sb, itg, itg.RealClassName);
 		sb.AppendLine().AppendSettingsKind(1, SettingsKind.Real);
 		sb.AppendClassBodyEnd(itg.RealClassName);
 	}
 
-	static void MakeExtensionsClass(Cache _, StringBuilder sb, InterfaceToGenerate itg) {
+	static void MakeExtensionsClass(StringBuilder sb, InterfaceToGenerate itg) {
 		sb.AppendClassComment("EXTENSIONS")
 			.AppendLine("{1} static partial class {0}Extensions {{", itg.ClassName, itg.AccessibilityKeyword)
-			.AppendLine(1, "public static {0} Get{1}(this cfg::ISyncSettingsProvider provider, cfg::SettingsKind kind)", itg.InterfaceName, itg.ClassName)
+			.AppendLine(1, "public static {0} Get{1}(this cfg::ISyncSettingsProvider provider, cfg::SettingsKind kind)",
+			            itg.InterfaceName, itg.ClassName
+			)
 			.AppendLine(2, "=> ({0}) provider.Get(typeof({0}), kind);", itg.InterfaceName)
 			.AppendLine()
-			.AppendLine(1, "public static {0} Copy{1}(this cfg::ISyncSettingsProvider provider)", itg.CopyClassName, itg.ClassName)
+			.AppendLine(1, "public static {0} Copy{1}(this cfg::ISyncSettingsProvider provider)", itg.CopyClassName,
+			            itg.ClassName
+			)
 			.AppendLine(2, "=> ({0}) provider.Get(typeof({1}), SettingsKind.Copy);", itg.CopyClassName, itg.InterfaceName)
 			.AppendLine()
-			.AppendLine(1, "public static {0} Read{1}(this cfg::ISyncSettingsProvider provider)", itg.ReadClassName, itg.ClassName)
+			.AppendLine(1, "public static {0} Read{1}(this cfg::ISyncSettingsProvider provider)", itg.ReadClassName,
+			            itg.ClassName
+			)
 			.AppendLine(2, "=> ({0}) provider.Get(typeof({1}), SettingsKind.Read);", itg.ReadClassName, itg.InterfaceName)
 			.AppendLine()
-			.AppendLine(1, "public static {0} Inpc{1}(this cfg::ISyncSettingsProvider provider)", itg.InpcClassName, itg.ClassName)
+			.AppendLine(1, "public static {0} Inpc{1}(this cfg::ISyncSettingsProvider provider)", itg.InpcClassName,
+			            itg.ClassName
+			)
 			.AppendLine(2, "=> ({0}) provider.Get(typeof({1}), SettingsKind.Inpc);", itg.InpcClassName, itg.InterfaceName)
 			.AppendLine()
-			.AppendLine(1, "public static {0} Real{1}(this cfg::ISyncSettingsProvider provider)", itg.RealClassName, itg.ClassName)
+			.AppendLine(1, "public static {0} Real{1}(this cfg::ISyncSettingsProvider provider)", itg.RealClassName,
+			            itg.ClassName
+			)
 			.AppendLine(2, "=> ({0}) provider.Get(typeof({1}), SettingsKind.Real);", itg.RealClassName, itg.InterfaceName)
 			.AppendLine()
 			.AppendLine(1, "public static void Delete{0}(this cfg::ISyncSettingsProvider provider)", itg.ClassName)
@@ -653,20 +762,40 @@ public class ConfigurationsGenerator : IIncrementalGenerator {
 			.AppendLine(1, "public static void Reset{0}(this cfg::ISyncSettingsProvider provider)", itg.ClassName)
 			.AppendLine(2, "=> provider.Reset(typeof({0}));", itg.InterfaceName)
 			.AppendLine() // async methods
-			.AppendLine(1, "public static async Task<{0}> Get{1}Async(this cfg::IAsyncSettingsProvider provider, cfg::SettingsKind kind)", itg.InterfaceName, itg.ClassName)
+			.AppendLine(
+				1,
+				"public static async Task<{0}> Get{1}Async(this cfg::IAsyncSettingsProvider provider, cfg::SettingsKind kind)",
+				itg.InterfaceName, itg.ClassName
+			)
 			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({0}), kind);", itg.InterfaceName)
 			.AppendLine()
-			.AppendLine(1, "public static async Task<{0}> Copy{1}Async(this cfg::IAsyncSettingsProvider provider)", itg.CopyClassName, itg.ClassName)
-			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Copy);", itg.CopyClassName, itg.InterfaceName)
+			.AppendLine(1, "public static async Task<{0}> Copy{1}Async(this cfg::IAsyncSettingsProvider provider)",
+			            itg.CopyClassName, itg.ClassName
+			)
+			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Copy);", itg.CopyClassName,
+			            itg.InterfaceName
+			)
 			.AppendLine()
-			.AppendLine(1, "public static async Task<{0}> Read{1}Async(this cfg::IAsyncSettingsProvider provider)", itg.ReadClassName, itg.ClassName)
-			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Read);", itg.ReadClassName, itg.InterfaceName)
+			.AppendLine(1, "public static async Task<{0}> Read{1}Async(this cfg::IAsyncSettingsProvider provider)",
+			            itg.ReadClassName, itg.ClassName
+			)
+			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Read);", itg.ReadClassName,
+			            itg.InterfaceName
+			)
 			.AppendLine()
-			.AppendLine(1, "public static async Task<{0}> Inpc{1}Async(this cfg::IAsyncSettingsProvider provider)", itg.InpcClassName, itg.ClassName)
-			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Inpc);", itg.InpcClassName, itg.InterfaceName)
+			.AppendLine(1, "public static async Task<{0}> Inpc{1}Async(this cfg::IAsyncSettingsProvider provider)",
+			            itg.InpcClassName, itg.ClassName
+			)
+			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Inpc);", itg.InpcClassName,
+			            itg.InterfaceName
+			)
 			.AppendLine()
-			.AppendLine(1, "public static async Task<{0}> Real{1}Async(this cfg::IAsyncSettingsProvider provider)", itg.RealClassName, itg.ClassName)
-			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Real);", itg.RealClassName, itg.InterfaceName)
+			.AppendLine(1, "public static async Task<{0}> Real{1}Async(this cfg::IAsyncSettingsProvider provider)",
+			            itg.RealClassName, itg.ClassName
+			)
+			.AppendLine(2, "=> ({0}) await provider.GetAsync(typeof({1}), SettingsKind.Real);", itg.RealClassName,
+			            itg.InterfaceName
+			)
 			.AppendLine()
 			.AppendLine(1, "public static Task Delete{0}Async(this cfg::IAsyncSettingsProvider provider)", itg.ClassName)
 			.AppendLine(2, "=> provider.DeleteAsync(typeof({0}));", itg.InterfaceName)

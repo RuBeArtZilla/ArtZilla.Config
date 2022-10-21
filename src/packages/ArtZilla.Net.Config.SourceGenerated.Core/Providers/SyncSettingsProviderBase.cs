@@ -1,61 +1,41 @@
 namespace ArtZilla.Net.Config;
 
-/// <inheritdoc />
-public abstract class SyncSettingsProviderBase : ISettingsProvider {
+/// <inheritdoc cref="ISettingsProvider"/>
+public abstract class SyncSettingsProviderBase : BaseSettingsProvider, ISettingsProvider {
 	/// <inheritdoc />
-	public abstract bool IsExist(Type type, string? key = null);
+	protected SyncSettingsProviderBase() { }
 
 	/// <inheritdoc />
-	public abstract bool Delete(Type type, string? key = null);
+	protected SyncSettingsProviderBase(ISettingsTypeConstructor constructor)
+		: base(constructor) { }
 
 	/// <inheritdoc />
-	public abstract void Reset(Type type, string? key = null);
-
-	/// <inheritdoc />
-	public abstract void Flush(Type? type = null, string? key = null);
-
-	/// <inheritdoc />
-	public abstract ISettings Get(Type type, SettingsKind kind, string? key = null);
-
-	/// <inheritdoc />
-	public abstract void Set(ISettings settings, string? key = null);
-
-	/// <inheritdoc />
-	Task<bool> IAsyncSettingsProvider.IsExistAsync(Type type, string? key)
+	public override Task<bool> IsExistAsync(Type type, string? key = null)
 		=> Task.FromResult(IsExist(type, key));
 
 	/// <inheritdoc />
-	Task<bool> IAsyncSettingsProvider.DeleteAsync(Type type, string? key)
+	public override Task<bool> DeleteAsync(Type type, string? key = null)
 		=> Task.FromResult(Delete(type, key));
 
 	/// <inheritdoc />
-	Task IAsyncSettingsProvider.ResetAsync(Type? type, string? key) {
+	public override Task ResetAsync(Type type, string? key = null) {
 		Reset(type, key);
 		return Task.CompletedTask;
 	}
 
 	/// <inheritdoc />
-	Task IAsyncSettingsProvider.FlushAsync(Type? type, string? key) {
+	public override Task FlushAsync(Type? type = null, string? key = null) {
 		Flush(type, key);
 		return Task.CompletedTask;
 	}
 
 	/// <inheritdoc />
-	Task<ISettings> IAsyncSettingsProvider.GetAsync(Type type, SettingsKind kind, string? key)
+	public override Task<ISettings> GetAsync(Type type, SettingsKind kind, string? key = null)
 		=> Task.FromResult(Get(type, kind, key));
 
 	/// <inheritdoc />
-	Task IAsyncSettingsProvider.SetAsync(ISettings settings, string? key) {
+	public override Task SetAsync(ISettings settings, string? key = null) {
 		Set(settings, key);
 		return Task.CompletedTask;
 	}
-
-	/// <inheritdoc />
-	public abstract ISettingsTypeConstructor Constructor { get; }
-
-	/// <inheritdoc />
-	public abstract void ThrowIfNotSupported(Type type);
-								/*
-	/// <inheritdoc />
-	public abstract IKeySettingsProvider ByKey(Type keyType, Type settingsType);   */
 }

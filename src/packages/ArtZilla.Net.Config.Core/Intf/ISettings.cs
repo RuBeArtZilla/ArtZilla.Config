@@ -74,6 +74,11 @@ public abstract class SettingsBase : ISettings {
 	ISettingsProvider? _source;
 	string? _sourceKey;
 
+	protected SettingsBase() { }
+	
+	protected SettingsBase(ISettingsProvider? source, string? key)
+		=> (_source, _sourceKey) = (source, key);
+
 	/// <inheritdoc />
 	public abstract Type GetInterfaceType();
 
@@ -112,6 +117,11 @@ public abstract class SettingsBase : ISettings {
 public abstract class SettingsInpcBase : SettingsBase, IInpcSettings {
 	/// <inheritdoc cref="INotifyPropertyChanged.PropertyChanged"/>
 	public event PropertyChangedEventHandler? PropertyChanged;
+
+	protected SettingsInpcBase() { }
+	
+	protected SettingsInpcBase(ISettingsProvider? source, string? key) 
+		: base(source, key) { }
 
 	/// 
 	/// <param name="propertyName"></param>

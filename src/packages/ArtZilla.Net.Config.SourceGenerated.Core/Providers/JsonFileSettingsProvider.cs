@@ -6,13 +6,14 @@ using System.Text.Unicode;
 using System.Diagnostics.CodeAnalysis;
 #endif
 
-namespace ArtZilla.Net.Config; 
-
-
+namespace ArtZilla.Net.Config;
 
 #if NET60_OR_GREATER
 
+/// <inheritdoc />
 public sealed class JsonFileSerializer : FileSerializer {
+	// ReSharper disable once UnusedMember.Global
+	///
 	public bool EnumAsString {
 		get => _enumAsString;
 		set {
@@ -20,37 +21,14 @@ public sealed class JsonFileSerializer : FileSerializer {
 				return;
 			_enumAsString = value;
 			if (value)
-				Options.Converters.Add(EnumAsStringConverter);
+				_options.Converters.Add(EnumAsStringConverter);
 			else
-				Options.Converters.Remove(EnumAsStringConverter);
+				_options.Converters.Remove(EnumAsStringConverter);
 		}
 	}
 
 	bool _enumAsString;
-	
-	public JsonFileSerializer(ISettingsTypeConstructor constructor) : base(constructor) { }
-	
-	/// <inheritdoc />
-	public override string GetFileExtension() => ".json";
-	
-	/// <inheritdoc />
-	public override async Task Serialize(Type type, IRealSettings settings, string path) {
-		await using var stream = File.OpenWrite(path);
-		var copyType = Constructor.GetType(type, SettingsKind.Copy);
-		var copy = Constructor.Create(type, SettingsKind.Copy, settings);
-		await JsonSerializer.SerializeAsync(stream, copy, copyType, Options);
-	}
-
-	/// <inheritdoc />
-	public override async Task Deserialize(Type type, IRealSettings settings, string path) {
-		await using var stream = File.OpenRead(path);
-		var copyType = Constructor.GetType(type, SettingsKind.Copy);
-		if (await JsonSerializer.DeserializeAsync(stream, copyType, Options) is ISettings parseResult)
-			settings.Copy(parseResult);
-	}
-	
-	
-	readonly JsonSerializerOptions Options = new() {
+	readonly JsonSerializerOptions _options = new() {
 		WriteIndented = true,
 		AllowTrailingCommas = true,
 		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
@@ -58,22 +36,58 @@ public sealed class JsonFileSerializer : FileSerializer {
 		PropertyNameCaseInsensitive = true,
 	};
 
+	/// <inheritdoc />
+	public JsonFileSerializer(ISettingsTypeConstructor constructor) : base(constructor) { }
+
+	/// <inheritdoc />
+	public override string GetFileExtension() => ".json";
+
+	/// <inheritdoc />
+	public override async Task Serialize(Type type, string path, ISettings settings) {
+		var copyType = Constructor.GetType(type, SettingsKind.Copy);
+		var copy = settings.GetType() == copyType
+			? settings
+			: Constructor.CloneCopy(settings);
+
+		await using var stream = File.Create(path);
+		await JsonSerializer.SerializeAsync(stream, copy, copyType, _options);
+	}
+
+	/// <inheritdoc />
+	public override async Task<ISettings> Deserialize(Type type, string path) {
+		await using var stream = File.OpenRead(path);
+		var copyType = Constructor.GetType(type, SettingsKind.Copy);
+		if (await JsonSerializer.DeserializeAsync(stream, copyType, _options) is ISettings parseResult)
+			return parseResult;
+		throw new($"Can't deserialize {type} from {path}");
+	}
+
 	static readonly JsonConverter EnumAsStringConverter = new JsonStringEnumConverter(JsonNamingPolicy.CamelCase);
 }
 
+///
 public class JsonFileSettingsProvider : FileSettingsProvider {
+	/// <inheritdoc />
 	public JsonFileSettingsProvider()
 		: this(new SameAssemblySettingsTypeConstructor()) { }
+
+	/// <inheritdoc />
 	public JsonFileSettingsProvider(string location)
 		: this(location, new SameAssemblySettingsTypeConstructor()) { }
 
+	/// <inheritdoc />
 	public JsonFileSettingsProvider(ISettingsTypeConstructor constructor)
-		: base(new JsonFileSerializer(constructor), constructor) { }
-	
+		: base(constructor, new JsonFileSerializer(constructor)) { }
+
+	/// <inheritdoc />
 	public JsonFileSettingsProvider(string location, ISettingsTypeConstructor constructor)
-		: base(new JsonFileSerializer(constructor), constructor, location) { }
-	            
-	public static JsonFileSettingsProvider Create(string app, string? company = null) 
+		: base(constructor, new JsonFileSerializer(constructor), location) { }
+
+	///
+	/// <param name="app"></param>
+	/// <param name="company"></param>
+	/// <returns></returns>
+	public static JsonFileSettingsProvider Create(string app, string? company = null)
 		=> new(GetLocation(app, company));
 }
 

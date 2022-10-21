@@ -44,7 +44,7 @@ public sealed class SimpleTests : Core {
 
 	[TestMethod, Timeout(DefaultTimeout)]
 	public void InitByMethodTest() {
-		var settings = new InitByMethodSettings_Read();
+		var settings = new InitByMethodSettings_Read(true);
 		Debug.WriteLine(settings);
 		Assert.AreEqual(2, settings.Lines.Count);
 		Assert.AreEqual(42, settings.Number);
@@ -55,9 +55,37 @@ public sealed class SimpleTests : Core {
 	[TestMethod, Timeout(DefaultTimeout)]
 	public void SameAssemblySettingsTypeConstructorTest() {
 		var ctor = new SameAssemblySettingsTypeConstructor();
-		var copy = ctor.CreateCopy<ISimpleSettings>();
+		var copy = ctor.Default<ISimpleSettings>();
 		copy.Text = "Marie Rose";
-		var read = ctor.CreateRead(copy);
+		var read = ctor.Clone<ISimpleSettings>(copy);
 		Assert.AreEqual(copy.Text, read.Text);
+	}
+
+	[TestMethod, Timeout(DefaultTimeout)]
+	public async Task JsonFileSerializerTest() {
+		var serializer = new JsonFileSerializer(new SameAssemblySettingsTypeConstructor());
+		var path = Path.GetTempFileName();
+		var type = typeof(ISimpleSettings);
+		var settings = new SimpleSettings_Copy(true) {
+			Text = LongText
+		};
+
+		await serializer.Serialize(type, path, settings);
+		{
+			var expected = settings.ToJsonString();
+			var actual = await File.ReadAllTextAsync(path);
+			Debug.Print("expected text: {0}", expected);
+			Debug.Print("actual text: {0}", actual);
+			Assert.AreEqual(expected, actual);
+		}
+
+		{
+			var expected = (ISimpleSettings) settings;
+			var actual = (ISimpleSettings) await serializer.Deserialize(type, path);
+			Debug.Print("expected: {0}", expected);
+			Debug.Print("actual: {0}", actual);
+			Assert.AreEqual(expected.Text, actual.Text);
+			// Assert.AreEqual(expected, actual); // <- todo
+		}
 	}
 }

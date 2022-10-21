@@ -1,3 +1,5 @@
+using System.Runtime.Serialization;
+
 namespace ArtZilla.Net.Config.Tests;
 
 [GenerateConfiguration]

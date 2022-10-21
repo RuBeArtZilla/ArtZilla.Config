@@ -2,17 +2,21 @@ using Newtonsoft.Json;
 
 namespace ArtZilla.Net.Config;
 
+/// <inheritdoc />
 public class JsonNetFileSerializer : FileSerializer {
+	/// <inheritdoc />
 	public JsonNetFileSerializer(ISettingsTypeConstructor constructor) : base(constructor) { }
 	
 	/// <inheritdoc />
 	public override string GetFileExtension() => ".json";
 	
 	/// <inheritdoc />
-	public override Task Serialize(Type type, IRealSettings settings, string path) {
+	public override Task Serialize(Type type, string path, ISettings settings) {
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
-		var copy = Constructor.Create(type, SettingsKind.Copy, settings);
-		
+		var copy = settings.GetType() == copyType
+			? settings
+			: Constructor.CloneCopy(settings);
+
 		using var writer = File.CreateText(path);
 		using var jsonWriter = new JsonTextWriter(writer);
 		_serializer.Serialize(jsonWriter, copy, copyType);
@@ -20,33 +24,38 @@ public class JsonNetFileSerializer : FileSerializer {
 	}
 
 	/// <inheritdoc />
-	public override Task Deserialize(Type type, IRealSettings settings, string path) {
-		var copyType = Constructor.GetType(type, SettingsKind.Copy);
-		
+	public override Task<ISettings> Deserialize(Type type, string path) {
 		using var reader = File.OpenText(path);
 		using var jsonReader = new JsonTextReader(reader);
-		var copy = _serializer.Deserialize(jsonReader, copyType);
-		settings.Copy((ICopySettings) copy);
-		return Task.CompletedTask;
+		var copyType = Constructor.GetType(type, SettingsKind.Copy);
+		var copy = (ISettings) _serializer.Deserialize(jsonReader, copyType)!;
+		return Task.FromResult(copy);
 	}
 	
 	readonly JsonSerializer _serializer = JsonSerializer.Create(new() { Formatting = Formatting.Indented });
 }
 
+/// <inheritdoc />
 public class JsonNetFileSettingsProvider : FileSettingsProvider {
+	/// <inheritdoc />
 	public JsonNetFileSettingsProvider()
 		: this(new SameAssemblySettingsTypeConstructor()) { }
+	/// <inheritdoc />
 	public JsonNetFileSettingsProvider(string location)
 		: this(location, new SameAssemblySettingsTypeConstructor()) { }
 
+	/// <inheritdoc />
 	public JsonNetFileSettingsProvider(ISettingsTypeConstructor constructor)
-		: base(new JsonNetFileSerializer(constructor), constructor) { }
-	
-	public JsonNetFileSettingsProvider(string location, ISettingsTypeConstructor constructor)
-		: base(new JsonNetFileSerializer(constructor), constructor, location) { }
+		: base(constructor, new JsonNetFileSerializer(constructor)) { }
 
+	/// <inheritdoc />
+	public JsonNetFileSettingsProvider(string location, ISettingsTypeConstructor constructor)
+		: base(constructor, new JsonNetFileSerializer(constructor), location) { }
+
+	///
+	/// <param name="app"></param>
+	/// <param name="company"></param>
+	/// <returns></returns>
 	public static JsonNetFileSettingsProvider Create(string app, string? company = null) 
 		=> new(GetLocation(app, company));
-	
-	readonly JsonSerializer _serializer = JsonSerializer.Create(new() { Formatting = Formatting.Indented });
 }

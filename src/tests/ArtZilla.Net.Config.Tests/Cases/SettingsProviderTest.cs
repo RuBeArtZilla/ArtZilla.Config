@@ -1,42 +1,9 @@
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ArtZilla.Net.Config.Tests;
 
 public abstract class SettingsProviderTest<T> : Core where T : class, ISettingsProvider, new() {
-	sealed class ChangesList : List<string>, IDisposable {
-		public ChangesList(IInpcSettings settings) {
-			_settings = settings;
-			Subscribe();
-		}
-
-		~ChangesList()
-			=> ReleaseUnmanagedResources();
-
-		public void Subscribe()
-			=> _settings.Subscribe(OnPropertyChanged);
-
-		public void Unsubscribe()
-			=> _settings.Unsubscribe(OnPropertyChanged);
-
-		void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
-			=> this.Add(args.PropertyName);
-
-		readonly IInpcSettings _settings;
-
-		void ReleaseUnmanagedResources() {
-			// release unmanaged resources here
-		}
-
-		/// <inheritdoc />
-		public void Dispose() {
-			ReleaseUnmanagedResources();
-			GC.SuppressFinalize(this);
-			Unsubscribe();
-		}
-	}
-
 	protected virtual T CreateUniqueProvider([CallerMemberName] string? name = null) => new();
 
 	[TestMethod, Timeout(DefaultTimeout)]
@@ -44,13 +11,13 @@ public abstract class SettingsProviderTest<T> : Core where T : class, ISettingsP
 		var provider = CreateUniqueProvider();
 
 		provider.ThrowIfNotSupported<ISimpleSettings>();
-		Assert.AreEqual(new SimpleSettings_Read().ToString(), provider.ReadSimpleSettings().ToString());
+		Assert.AreEqual(new SimpleSettings_Read(true).ToString(), provider.ReadSimpleSettings().ToString());
 		provider.ThrowIfNotSupported<IInheritedSettings>();
-		Assert.AreEqual(new InheritedSettings_Read().ToString(), provider.ReadInheritedSettings().ToString());
+		Assert.AreEqual(new InheritedSettings_Read(true).ToString(), provider.ReadInheritedSettings().ToString());
 		provider.ThrowIfNotSupported<IInitByMethodSettings>();
-		Assert.AreEqual(new InitByMethodSettings_Read().ToString(), provider.ReadInitByMethodSettings().ToString());
+		Assert.AreEqual(new InitByMethodSettings_Read(true).ToString(), provider.ReadInitByMethodSettings().ToString());
 		provider.ThrowIfNotSupported<IListSettings>();
-		Assert.AreEqual(new ListSettings_Read().ToString(), provider.ReadListSettings().ToString());
+		Assert.AreEqual(new ListSettings_Read(true).ToString(), provider.ReadListSettings().ToString());
 
 		provider.TryDispose();
 	}
@@ -225,6 +192,21 @@ public abstract class SettingsProviderTest<T> : Core where T : class, ISettingsP
 			Assert.AreNotEqual(file2, file3);
 		}
 		
+		provider.TryDispose();
+	}
+
+	[TestMethod, Timeout(DefaultTimeout)]
+	public async Task DictTest() {
+		var provider = CreateUniqueProvider();
+		var settings = await provider.RealDictSettingsAsync();
+		var guid = Guid.NewGuid();
+		var item = settings.Map.AddNew(guid);
+		item.Text = LongText;
+		await provider.FlushAsync();
+
+		var read = await provider.ReadDictSettingsAsync();
+		Assert.AreEqual(3, read.Map.Count);
+
 		provider.TryDispose();
 	}
 }

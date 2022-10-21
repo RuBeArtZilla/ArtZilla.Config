@@ -1,26 +1,36 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Reflection;
 using ArtZilla.Net.Core.Extensions;
 using Guard = CommunityToolkit.Diagnostics.Guard;
 
 namespace ArtZilla.Net.Config;
 
-public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
-	/// <inheritdoc cref="ISettingsTypeConstructor"/> 
-	public ISettingsTypeConstructor Constructor { get; }
-
+///
+public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
+	///
 	public FileSerializer Serializer { get; }
 
+	/// 
 	public string Location { get; }
 
+	/// 
 	protected record Pack {
 		public string Path;
 		public IRealSettings Settings;
 
 		public DateTime Changed;
 		public long Length;
+
+		public Pack() { }
+
+		public Pack(IRealSettings settings, string path)
+			=> (Settings, Path) = (settings, path);
+
+		public void Set(FileInfo fi)
+			=> (Length, Changed) = (fi.Length, fi.LastWriteTime);
 	}
 
 	bool _isSaving;
@@ -30,27 +40,33 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	readonly bool _isTrackChanges;
 	readonly CancellationTokenSource _stopAllTasks = new();
 	readonly ConcurrentDictionary<(Type Type, string? Key), Pack> _map = new();
+	readonly MemorySettingsProvider _memory;
 
 	/// 
-	/// <param name="serializer"></param>
 	/// <param name="constructor"></param>
+	/// <param name="serializer"></param>
 	/// <param name="location"></param>
 	/// <param name="isTrackChanges"></param>
 	protected FileSettingsProvider(
-		FileSerializer serializer,
 		ISettingsTypeConstructor constructor,
+		FileSerializer serializer,
 		string? location = null,
 		bool isTrackChanges = true
-	) {
+	) : base(constructor) {
 		Guard.IsNotNull(serializer);
 		Guard.IsNotNull(constructor);
 		Debug.Print("Created {0} with path {1}", GetType().Name, location);
-		(Serializer, Location, Constructor, _isTrackChanges) =
-			(serializer, location ?? GetDefaultLocation(), constructor, isTrackChanges);
+		(Serializer, Location, _isTrackChanges) =
+			(serializer, location ?? GetDefaultLocation(), isTrackChanges);
 
-		Task.Factory.StartNew(UpdateTask, _stopAllTasks.Token, _stopAllTasks.Token);
+		_memory = new(constructor);
+		Task.Factory.StartNew(UpdateTask, _stopAllTasks.Token, _stopAllTasks.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 	}
 
+	/// 
+	/// <param name="app"></param>
+	/// <param name="company"></param>
+	/// <returns></returns>
 	public static string GetLocation(string app, string? company = null) {
 		Guard.IsNotNull(app);
 		var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -81,11 +97,11 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	}
 
 	/// <inheritdoc />
-	public bool IsExist(Type type, string? key = null)
+	public override bool IsExist(Type type, string? key = null)
 		=> TryGetPack(type, key, out var pack) && File.Exists(pack!.Path);
 
 	/// <inheritdoc />
-	public bool Delete(Type type, string? key = null) {
+	public override bool Delete(Type type, string? key = null) {
 		const int maxTryCount = 10;
 		const int pauseMs = 1000;
 
@@ -122,15 +138,20 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	}
 
 	/// <inheritdoc />
-	public void Reset(Type type, string? key = null) {
+	public override void Reset(Type type, string? key = null) {
+		Debug.Print("> {0}.{1}({3}, {4}); [{2}]", GetType().Name, nameof(Reset), GetId(), type, key);
+
 		var pack = GetPack(type, key);
 		var real = pack.Settings;
-		var read = Constructor.CreateRead(real.GetInterfaceType());
+		var read = _memory.Read(type, key);
+
 		real.Copy(read);
+
+		Debug.Print("< {0}.{1}({3}, {4}); [{2}]", GetType().Name, nameof(Reset), GetId(), type, key);
 	}
 
 	/// <inheritdoc />
-	public void Flush(Type? type = null, string? key = null) {
+	public override void Flush(Type? type = null, string? key = null) {
 		if (type != null) {
 			var pack = GetPack(type, key);
 			var real = pack.Settings;
@@ -140,19 +161,18 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	}
 
 	/// <inheritdoc />
-	public ISettings Get(Type type, SettingsKind kind, string? key = null) {
+	public override ISettings Get(Type type, SettingsKind kind, string? key = null) {
 		var pack = GetPack(type, key);
 		var real = pack.Settings;
 		if (kind == SettingsKind.Real)
 			return real;
 
-		var settings = Constructor.Create(type, kind, real);
-		settings.Source = this;
+		var settings = Constructor.Create(type, kind, this, key, real);
 		return settings;
 	}
 
 	/// <inheritdoc />
-	public void Set(ISettings settings, string? key = null) {
+	public override void Set(ISettings settings, string? key = null) {
 		var type = settings.GetInterfaceType();
 		var pack = GetPack(type, key);
 		var real = pack.Settings;
@@ -160,45 +180,55 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	}
 
 	/// <inheritdoc />
-	public async Task<bool> IsExistAsync(Type type, string? key = null)
+	public override async Task<bool> IsExistAsync(Type type, string? key = null)
 		=> await TryGetPackAsync(type, key, out var pack) && File.Exists(pack!.Path);
 
 	/// <inheritdoc />
-	public Task<bool> DeleteAsync(Type type, string? key = null)
+	public override Task<bool> DeleteAsync(Type type, string? key = null)
 		=> Task.FromResult(Delete(type));
 
 	/// <inheritdoc />
-	public async Task ResetAsync(Type type, string? key = null) {
+	public override async Task ResetAsync(Type type, string? key = null) {
+		Debug.Print("> {0}.{1}({3}, {4}); [{2}]", GetType().Name, nameof(ResetAsync), GetId(), type, key);
+
 		var pack = await GetPackAsync(type, key);
 		var real = pack.Settings;
-		var read = Constructor.CreateRead(real.GetInterfaceType());
+		var read = await _memory.ReadAsync(type, key);
+
 		real.Copy(read);
+
+		Debug.Print("< {0}.{1}({3}, {4}); [{2}]", GetType().Name, nameof(ResetAsync), GetId(), type, key);
 	}
 
+	long GetId() => GetHashCode();
+
 	/// <inheritdoc />
-	public async Task FlushAsync(Type? type = null, string? key = null) {
+	public override async Task FlushAsync(Type? type = null, string? key = null) {
+		Debug.Print("> {0}.{1}({3}, {4}); [{2}]", GetType().Name, nameof(FlushAsync), GetId(), type, key);
+
 		if (type != null) {
 			var pack = await GetPackAsync(type, key);
 			var real = pack.Settings;
-			SpinWait.SpinUntil(() => !_isSaving && !_toSaveQueue.Contains(real));
+			SpinWait.SpinUntil(() => !_isSaving && !_toSaveQueue.Contains(real) && !_fsEvents.Any());
 		} else
-			SpinWait.SpinUntil(() => !_isSaving && _toSaveQueue.Count == 0);
+			SpinWait.SpinUntil(() => !_isSaving && _toSaveQueue.Count == 0 && !_fsEvents.Any());
+
+		Debug.Print("< {0}.{1}({3}, {4}); [{2}]", GetType().Name, nameof(FlushAsync), GetId(), type, key);
 	}
 
 	/// <inheritdoc />
-	public async Task<ISettings> GetAsync(Type type, SettingsKind kind, string? key = null) {
+	public override async Task<ISettings> GetAsync(Type type, SettingsKind kind, string? key = null) {
 		var pack = await GetPackAsync(type, key);
 		var real = pack.Settings;
 		if (kind == SettingsKind.Real)
 			return real;
 
-		var settings = Constructor.Create(type, kind, real);
-		settings.Source = this;
+		var settings = Constructor.Create(type, kind, this, key, real);
 		return settings;
 	}
 
 	/// <inheritdoc />
-	public async Task SetAsync(ISettings settings, string? key = null) {
+	public override async Task SetAsync(ISettings settings, string? key = null) {
 		var type = settings.GetInterfaceType();
 		var pack = await GetPackAsync(type, key);
 		var real = pack.Settings;
@@ -206,17 +236,24 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	}
 
 	/// <inheritdoc />
-	public void ThrowIfNotSupported(Type type)
+	public override void ThrowIfNotSupported(Type type)
 		=> AssertType(type).Wait();
 
 	///
-	public string GetPathToSettings(Type type, string? key = null) 
+	public string GetPathToSettings(Type type, string? key = null)
 		=> key is null
-			? Path.Combine(Location, type.Name + Serializer.GetFileExtension()) 
+			? Path.Combine(Location, type.Name + Serializer.GetFileExtension())
 			: Path.Combine(Location, type.Name, EnframeFilename(key) + Serializer.GetFileExtension());
 
 	string EnframeFilename(string filename) {
 		return filename; // todo: ...
+	}
+
+	///
+	public virtual bool IsAnyChangesInQueue() {
+		Debug.Print("In [{0}] queue write {1} read {2}",
+		            GetId(), _toSaveQueue.Count, _fsEvents.Count);
+		return _fsEvents.Count != 0 || _toSaveQueue.Count != 0;
 	}
 
 #if NETSTANDARD20
@@ -255,46 +292,71 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 			throw new NotImplementedException($"Type {settingsType} as settings is not supported (should be interface)");
 		if (settingsType.IsGenericType)
 			throw new NotImplementedException($"Generic type {settingsType} as settings is not supported");
-		
+
 		var location = Path.Combine(Location, keyType.Name, settingsType.Name);
 		return location;
 	}
 
 	async Task AssertType(Type type) {
-		var settings = Constructor.CreateReal(type);
 		var tempPath = Path.GetTempFileName();
-		await Serializer.Serialize(type, settings, tempPath);
-		await Serializer.Deserialize(type, settings, tempPath);
+		var expected = Constructor.Create(type, SettingsKind.Copy, this, null, true);
+		await Serializer.Serialize(type, tempPath, expected);
+		var actual = await Serializer.Deserialize(type, tempPath);
+		// Guard.IsEqualTo(expected, actual); // <- todo
 	}
 
 	async Task<Pack> CreatePack(Type type, string? key) {
-		var real = Constructor.CreateReal(type);
-		real.Source = this;
-		real.SourceKey = key;
-		
-		var path = GetPathToSettings(real.GetInterfaceType(), key);
-		if (File.Exists(path))
-			await Serializer.Deserialize(real.GetInterfaceType(), real, path);
-		
-		Pack pack = new() {
-			Path = path,
-			Settings = real
-		};
-		
-		real.Subscribe(OnPropertyChanged);
-		Debug.Print("Loaded {0} as {1}", type, real);
+		var path = GetPathToSettings(type, key);
+		var (source, size, time) = await ReadAsync(type, path);
+		var settings = source is not null
+			? Constructor.CloneReal(source)
+			: Constructor.DefaultReal(type, this, key);
+
+		Pack pack = new(settings, path) { Length = size, Changed = time };
+
+		settings.Subscribe(OnPropertyChanged);
+		Debug.Print("Loaded {0} as {1}", type, settings);
 		return pack;
+	}
+
+	async Task<(ISettings? Settings, long Size, DateTime Time)> ReadAsync(Type type, string path) {
+		try {
+			var fi = new FileInfo(path);
+			if (!fi.Exists)
+				return default;
+
+			var size = fi.Length;
+			var time = fi.LastWriteTime;
+			var settings = await Serializer.Deserialize(type, path);
+			return (settings, size, time);
+		} catch (Exception e) {
+			Debug.WriteLine(e);
+			return default;
+		}
+	}
+
+	async Task ReadAsync(Pack pack) {
+		var settings = pack.Settings;
+		var path = pack.Path;
+		var type = settings.GetInterfaceType();
+		var key = settings.SourceKey;
+		var read = await Serializer.Deserialize(type, path);
+		if (read is null)
+			return;
+
+		pack.Settings.Copy(read);
+		Debug.Print("({0}, {1}) in {2} loaded as {3}", type, key, GetId(), settings);
 	}
 
 	void OnPropertyChanged(object? sender, PropertyChangedEventArgs args) {
 		Debug.Print("Changed property {0} of {1}", args.PropertyName, sender);
-		_toSaveQueue.Add((IRealSettings)sender!);
+		_toSaveQueue.Add((IRealSettings) sender!);
 	}
 
 	async Task UpdateTask(object? tokenRaw) {
 		Debug.Print("Started {0}", nameof(UpdateTask));
 
-		var token = (CancellationToken)tokenRaw!;
+		var token = (CancellationToken) tokenRaw!;
 		if (_isTrackChanges)
 			SubscribeToDirectory();
 
@@ -328,15 +390,15 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 		}
 	}
 
-	protected virtual async Task ProcessUpdate(IRealSettings settings, Type intfType, Pack pack) {
+	async Task ProcessUpdate(IRealSettings settings, Type intfType, Pack pack) {
 		try {
 			var path = pack.Path;
 			var real = pack.Settings;
 			var fi = new FileInfo(pack.Path);
-			if (settings.SourceKey is not null && fi.Directory is { Exists: false }) 
+			if (settings.SourceKey is not null && fi.Directory is { Exists: false })
 				fi.Directory.Create();
 
-			await Serializer.Serialize(intfType, real, path);
+			await Serializer.Serialize(intfType, path, real);
 			pack.Changed = fi.LastWriteTime;
 			pack.Length = fi.Length;
 			Debug.Print("Saved {0} as {1}", intfType, real);
@@ -358,33 +420,34 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 			_watcher.Deleted += OnFileDeleted;
 			_watcher.EnableRaisingEvents = true;
 
-			Task.Factory.StartNew(ProcessFSEventsTask, _stopAllTasks.Token, _stopAllTasks.Token);
+			Task.Factory.StartNew(ProcessFSEventsTask, _stopAllTasks.Token, _stopAllTasks.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 		} catch (Exception e) {
 			Debug.Print("Error on {0}: {1}", nameof(SubscribeToDirectory), e);
 		}
 	}
 
 	void OnFileDeleted(object sender, FileSystemEventArgs args) {
-		Debug.Print("{0}: {1} | {2}", nameof(OnFileDeleted), args.Name, args.FullPath);
+		Debug.Print("{0}[{3}]: {1} | {2}", nameof(OnFileDeleted), args.Name, args.FullPath, GetId());
 		_fsEvents.Add(args);
 	}
 
 	void OnFileCreated(object sender, FileSystemEventArgs args) {
-		Debug.Print("{0}: {1} | {2}", nameof(OnFileCreated), args.Name, args.FullPath);
+		Debug.Print("{0}[{3}]: {1} | {2}", nameof(OnFileCreated), args.Name, args.FullPath, GetId());
 		_fsEvents.Add(args);
 	}
 
 	void OnFileChanged(object sender, FileSystemEventArgs args) {
-		Debug.Print("{0}: {1} | {2}", nameof(OnFileChanged), args.Name, args.FullPath);
+		Debug.Print("{0}[{3}]: {1} | {2}", nameof(OnFileChanged), args.Name, args.FullPath, GetId());
 		_fsEvents.Add(args);
 	}
 
 	async Task ProcessFSEventsTask(object? tokenRaw) {
 		Debug.Print("Started {0}", nameof(ProcessFSEventsTask));
-		var token = (CancellationToken)tokenRaw!;
+		var token = (CancellationToken) tokenRaw!;
 
 		while (!token.IsCancellationRequested) {
 			SpinWait.SpinUntil(() => _fsEvents.Count != 0 || token.IsCancellationRequested);
+			Debug.Print("!!!Catched {0}", nameof(ProcessFSEventsTask));
 
 			// _isUpdating = true;
 			try {
@@ -400,31 +463,55 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 	}
 
 	async Task ProcessEvents(HashSet<FileSystemEventArgs> list) {
-		// var ext = Serializer.GetFileExtension();
 		foreach (var item in list) {
 			try {
-				// var name = item.Name.TrimSuffix(ext, StringComparison.OrdinalIgnoreCase);
 				var path = item.FullPath;
-				var pack = _map.Where(pair => pair.Value.Path == path).Select(pair => pair.Value).FirstOrDefault();
-				if (pack is null) {
-					Debug.Print("pack {0} not found!", path);
+				Pack? pack = null;
+				var type = default(Type);
+				var key = default(string?);
+				foreach (var (mapKey, value) in _map) {
+					if (value.Path != path)
+						continue;
+
+					pack = value;
+					(type, key) = mapKey;
+					break;
+				}
+
+				if (pack is null || type is null) {
+					Debug.Print("* pack {0} not found!", path);
 					continue;
 				}
 
-				var settings = pack.Settings;
-				var type = settings.GetInterfaceType();
-				// var path = pack.Path;
-				if ((item.ChangeType & WatcherChangeTypes.Deleted) != 0)
-					await DeleteAsync(type);
-				else {
+				if ((item.ChangeType & WatcherChangeTypes.Deleted) != 0) {
+					Debug.Print("* ({0}, {1}) externally removed from {2}", type, key, GetId());
+					await DeleteAsync(type, key);
+				} else {
 					var fi = new FileInfo(path);
-					if (!fi.Exists || fi.LastWriteTime <= pack.Changed || fi.Length == pack.Length)
+					if (!fi.Exists) {
+						Debug.Print("* {0} skipped changes in {1}", path, GetId());
 						continue;
+					}
 
-					await Serializer.Deserialize(type, settings, path);
+					var sameTime = fi.LastWriteTime == pack.Changed;
+					var sameSize = fi.Length == pack.Length;
+					if (sameTime && sameSize) {
+						if (sameTime)
+							Debug.Print("* {0} skipped changes in {1} (changed {2}, last {3})", path, GetId(), fi.LastWriteTime, pack.Changed);
+						if (sameSize)
+							Debug.Print("* {0} skipped changes in {1} (length {2}, last {3})", path, GetId(), fi.Length, pack.Length);
+						continue;
+					}
+
+					Debug.Print("* ({0}, {1}) externaly changed in {2}", type, key, GetId());
+					var read = await Serializer.Deserialize(type, path);
+					pack.Changed = fi.LastWriteTime;
+					pack.Set(fi);
+					pack.Settings.Copy(read);
+
 				}
 			} catch (Exception e) {
-				Debug.Print("Error in {0}: {1}", nameof(ProcessEvents), e);
+				Debug.Print("* Error in {0}: {1}", nameof(ProcessEvents), e);
 			}
 		}
 	}
@@ -439,31 +526,4 @@ public abstract class FileSettingsProvider : ISettingsProvider, IDisposable {
 			Debug.Print(e.ToString());
 		}
 	}
-}
-
-///
-public abstract class FileSerializer {
-	///
-	public ISettingsTypeConstructor Constructor { get; }
-
-	///
-	public FileSerializer(ISettingsTypeConstructor constructor)
-		=> Constructor = constructor;
-
-	/// returns file extension for settings
-	public virtual string GetFileExtension() => ".cfg";
-
-	/// 
-	/// <param name="type"></param>
-	/// <param name="settings"></param>
-	/// <param name="path"></param>
-	/// <returns></returns>
-	public abstract Task Serialize(Type type, IRealSettings settings, string path);
-
-	/// 
-	/// <param name="type"></param>
-	/// <param name="settings"></param>
-	/// <param name="path"></param>
-	/// <returns></returns>
-	public abstract Task Deserialize(Type type, IRealSettings settings, string path);
 }

@@ -31,8 +31,8 @@ public static class SettingsProviderExtensions {
 		=> (ICopySettings) provider.Get(type, SettingsKind.Copy);
 	
 	/// Get settings (read)
-	public static IReadSettings Read(this ISyncSettingsProvider provider, Type type) 
-		=> (IReadSettings) provider.Get(type, SettingsKind.Read);
+	public static IReadSettings Read(this ISyncSettingsProvider provider, Type type, string? key = null)
+		=> (IReadSettings) provider.Get(type, SettingsKind.Read, key);
 	
 	/// Get settings (inpc)
 	public static IInpcSettings Inpc(this ISyncSettingsProvider provider, Type type) 
@@ -111,8 +111,8 @@ public static class SettingsProviderExtensions {
 		=> (ICopySettings) await provider.GetAsync(type, SettingsKind.Copy);
 
 	/// Get settings (read)
-	public static async Task<IReadSettings> ReadAsync(this IAsyncSettingsProvider provider, Type type) 
-		=> (IReadSettings) await provider.GetAsync(type, SettingsKind.Read);
+	public static async Task<IReadSettings> ReadAsync(this IAsyncSettingsProvider provider, Type type, string? key = null)
+		=> (IReadSettings) await provider.GetAsync(type, SettingsKind.Read, key);
 	
 	/// Get settings (inpc)
 	public static async Task<IInpcSettings> InpcAsync(this IAsyncSettingsProvider provider, Type type) 

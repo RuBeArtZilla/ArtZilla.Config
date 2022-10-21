@@ -40,7 +40,7 @@ public interface IAsyncSettingsProvider {
 
 	/// 
 	Task FlushAsync(Type? type = null, string? key = null);
-
+	
 	/// 
 	Task<ISettings> GetAsync(Type type, SettingsKind kind, string? key = null);
 
@@ -52,6 +52,9 @@ public interface IAsyncSettingsProvider {
 public interface ISettingsProvider : ISyncSettingsProvider, IAsyncSettingsProvider {
 	/// <see cref="ISettingsTypeConstructor"/>
 	ISettingsTypeConstructor Constructor { get; }
+	
+	///
+	ISettings GetDefault(Type type, SettingsKind kind);
 
 	/// 
 	void ThrowIfNotSupported(Type type);
