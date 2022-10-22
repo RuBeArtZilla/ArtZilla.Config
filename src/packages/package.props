@@ -15,7 +15,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     
-    <Version>0.5.8</Version>
-    <PackageVersion>0.5.8</PackageVersion>
+    <Version>0.5.9</Version>
+    <PackageVersion>0.5.9</PackageVersion>
   </PropertyGroup>
 </Project>

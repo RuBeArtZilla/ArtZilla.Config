@@ -6,7 +6,7 @@ public abstract class FileSerializerTests<T> : Core where T: FileSerializer {
 	protected abstract T CreateSerializer();
 
 	[TestMethod, Timeout(DefaultTimeout)]
-	public async Task BasicTest() {
+	public void BasicTest() {
 		var serializer = CreateSerializer();
 		var path = Path.GetTempFileName();
 		var type = typeof(ISimpleSettings);
@@ -14,10 +14,10 @@ public abstract class FileSerializerTests<T> : Core where T: FileSerializer {
 			Text = LongText
 		};
 
-		await serializer.Serialize(type, path, settings);
+		serializer.Serialize(type, path, settings);
 		{
 			var expected = settings.ToJsonString();
-			var actual = await File.ReadAllTextAsync(path);
+			var actual = File.ReadAllText(path);
 			Debug.Print("expected text: {0}", expected);
 			Debug.Print("actual text: {0}", actual);
 			// Assert.AreEqual(expected, actual);
@@ -25,7 +25,7 @@ public abstract class FileSerializerTests<T> : Core where T: FileSerializer {
 
 		{
 			var expected = (ISimpleSettings) settings;
-			var actual = (ISimpleSettings) await serializer.Deserialize(type, path);
+			var actual = (ISimpleSettings) serializer.Deserialize(type, path);
 			Debug.Print("expected: {0}", expected);
 			Debug.Print("actual: {0}", actual);
 			Assert.AreEqual(expected.Text, actual.Text);

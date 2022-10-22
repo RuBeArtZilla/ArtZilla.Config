@@ -43,21 +43,21 @@ public sealed class JsonFileSerializer : FileSerializer {
 	public override string GetFileExtension() => ".json";
 
 	/// <inheritdoc />
-	public override async Task Serialize(Type type, string path, ISettings settings) {
+	public override void Serialize(Type type, string path, ISettings settings) {
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
 		var copy = settings.GetType() == copyType
 			? settings
 			: Constructor.CloneCopy(settings);
 
-		await using var stream = File.Create(path);
-		await JsonSerializer.SerializeAsync(stream, copy, copyType, _options);
+		using var stream = File.Create(path);
+		JsonSerializer.Serialize(stream, copy, copyType, _options);
 	}
 
 	/// <inheritdoc />
-	public override async Task<ISettings> Deserialize(Type type, string path) {
-		await using var stream = File.OpenRead(path);
+	public override ISettings Deserialize(Type type, string path) {
+		using var stream = File.OpenRead(path);
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
-		if (await JsonSerializer.DeserializeAsync(stream, copyType, _options) is ISettings parseResult)
+		if (JsonSerializer.Deserialize(stream, copyType, _options) is ISettings parseResult)
 			return parseResult;
 		throw new($"Can't deserialize {type} from {path}");
 	}

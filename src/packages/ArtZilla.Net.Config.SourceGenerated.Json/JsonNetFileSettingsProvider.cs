@@ -11,7 +11,7 @@ public class JsonNetFileSerializer : FileSerializer {
 	public override string GetFileExtension() => ".json";
 	
 	/// <inheritdoc />
-	public override Task Serialize(Type type, string path, ISettings settings) {
+	public override void Serialize(Type type, string path, ISettings settings) {
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
 		var copy = settings.GetType() == copyType
 			? settings
@@ -20,16 +20,15 @@ public class JsonNetFileSerializer : FileSerializer {
 		using var writer = File.CreateText(path);
 		using var jsonWriter = new JsonTextWriter(writer);
 		_serializer.Serialize(jsonWriter, copy, copyType);
-		return Task.CompletedTask;
 	}
 
 	/// <inheritdoc />
-	public override Task<ISettings> Deserialize(Type type, string path) {
+	public override ISettings Deserialize(Type type, string path) {
 		using var reader = File.OpenText(path);
 		using var jsonReader = new JsonTextReader(reader);
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
 		var copy = (ISettings) _serializer.Deserialize(jsonReader, copyType)!;
-		return Task.FromResult(copy);
+		return copy;
 	}
 	
 	readonly JsonSerializer _serializer = JsonSerializer.Create(new() { Formatting = Formatting.Indented });

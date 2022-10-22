@@ -17,11 +17,11 @@ public abstract class FileSerializer {
 	/// <param name="settings"></param>
 	/// <param name="path"></param>
 	/// <returns></returns>
-	public abstract Task Serialize(Type type, string path, ISettings settings);
+	public abstract void Serialize(Type type, string path, ISettings settings);
 
 	/// 
 	/// <param name="type"></param>
 	/// <param name="path"></param>
 	/// <returns></returns>
-	public abstract Task<ISettings> Deserialize(Type type, string path);
+	public abstract ISettings Deserialize(Type type, string path);
 }

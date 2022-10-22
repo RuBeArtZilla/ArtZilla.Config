@@ -244,69 +244,52 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 			? Path.Combine(Location, type.Name + Serializer.GetFileExtension())
 			: Path.Combine(Location, type.Name, EnframeFilename(key) + Serializer.GetFileExtension());
 
-	string EnframeFilename(string filename) {
+	static string EnframeFilename(string filename) {
 		return filename; // todo: ...
 	}
 
 	///
-	public virtual bool IsAnyChangesInQueue() {
+	public bool IsAnyChangesInQueue() {
 		Debug.Print("In [{0}] queue write {1} read {2}",
 		            GetId(), _toSaveQueue.Count, _fsEvents.Count);
 		return _fsEvents.Count != 0 || _toSaveQueue.Count != 0;
 	}
 
+	///
 #if NETSTANDARD20
-	protected virtual bool TryGetPack(Type type, string? key, out Pack? pack)
+	protected bool TryGetPack(Type type, string? key, out Pack? pack)
 #else
-	protected virtual bool TryGetPack(Type type, string? key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Pack? pack)
+	protected bool TryGetPack(Type type, string? key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Pack? pack)
 #endif
 		=> _map.TryGetValue((type, key), out pack);
 
+	///
 #if NETSTANDARD20
-	protected virtual Task<bool> TryGetPackAsync(Type type, string? key, out Pack? pack)
+	protected Task<bool> TryGetPackAsync(Type type, string? key, out Pack? pack)
 #else
-	protected virtual Task<bool> TryGetPackAsync(Type type, string? key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Pack? pack)
+	protected Task<bool> TryGetPackAsync(Type type, string? key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Pack? pack)
 #endif
 		=> Task.FromResult(TryGetPack(type, key, out pack));
 
-	protected virtual Pack GetPack(Type type, string? key)
-		=> _map.GetOrAdd((type, key), i => CreatePack(i.Type, i.Key).Result);
+	///
+	protected Pack GetPack(Type type, string? key)
+		=> _map.GetOrAdd((type, key), i => CreatePack(i.Type, i.Key));
 
-	protected virtual Task<Pack> GetPackAsync(Type type, string? key)
+	///
+	protected Task<Pack> GetPackAsync(Type type, string? key)
 		=> Task.FromResult(GetPack(type, key));
-
-	/// 
-	/// <param name="keyType"></param>
-	/// <param name="settingsType"></param>
-	/// <returns></returns>
-	/// <exception cref="NotImplementedException">when type is not supported</exception>
-	protected virtual string MakeLocation(Type keyType, Type settingsType) {
-		if (keyType == typeof(object))
-			throw new NotImplementedException($"Type {keyType} as key is not supported");
-		if (keyType.IsGenericType)
-			throw new NotImplementedException($"Generic type {keyType} as key is not supported");
-		if (settingsType == typeof(ISettings))
-			throw new NotImplementedException($"Type {settingsType} as settings is not supported (should inherit ISettings)");
-		if (!settingsType.IsInterface)
-			throw new NotImplementedException($"Type {settingsType} as settings is not supported (should be interface)");
-		if (settingsType.IsGenericType)
-			throw new NotImplementedException($"Generic type {settingsType} as settings is not supported");
-
-		var location = Path.Combine(Location, keyType.Name, settingsType.Name);
-		return location;
-	}
 
 	async Task AssertType(Type type) {
 		var tempPath = Path.GetTempFileName();
 		var expected = Constructor.Create(type, SettingsKind.Copy, this, null, true);
-		await Serializer.Serialize(type, tempPath, expected);
-		var actual = await Serializer.Deserialize(type, tempPath).ConfigureAwait(false);
+		Serializer.Serialize(type, tempPath, expected);
+		var actual = Serializer.Deserialize(type, tempPath);
 		// Guard.IsEqualTo(expected, actual); // <- todo
 	}
 
-	async Task<Pack> CreatePack(Type type, string? key) {
+	Pack CreatePack(Type type, string? key) {
 		var path = GetPathToSettings(type, key);
-		var (source, size, time) = await ReadAsync(type, path).ConfigureAwait(false);
+		var (source, size, time) = ReadAsync(type, path);
 		var settings = source is not null
 			? Constructor.CloneReal(source)
 			: Constructor.DefaultReal(type, this, key);
@@ -318,7 +301,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 		return pack;
 	}
 
-	async Task<(ISettings? Settings, long Size, DateTime Time)> ReadAsync(Type type, string path) {
+		(ISettings? Settings, long Size, DateTime Time) ReadAsync(Type type, string path) {
 		try {
 			var fi = new FileInfo(path);
 			if (!fi.Exists)
@@ -326,25 +309,12 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 
 			var size = fi.Length;
 			var time = fi.LastWriteTime;
-			var settings = await Serializer.Deserialize(type, path).ConfigureAwait(false);
+			var settings = Serializer.Deserialize(type, path);
 			return (settings, size, time);
 		} catch (Exception e) {
 			Debug.WriteLine(e);
 			return default;
 		}
-	}
-
-	async Task ReadAsync(Pack pack) {
-		var settings = pack.Settings;
-		var path = pack.Path;
-		var type = settings.GetInterfaceType();
-		var key = settings.SourceKey;
-		var read = await Serializer.Deserialize(type, path).ConfigureAwait(false);
-		if (read is null)
-			return;
-
-		pack.Settings.Copy(read);
-		Debug.Print("({0}, {1}) in {2} loaded as {3}", type, key, GetId(), settings);
 	}
 
 	void OnPropertyChanged(object? sender, PropertyChangedEventArgs args) {
@@ -366,7 +336,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 			try {
 				(var updated, _toSaveQueue) = (_toSaveQueue, new HashSet<IRealSettings>());
 				await Task.Delay(100, token); // idk wa or not
-				await ProcessUpdates(updated);
+				ProcessUpdates(updated);
 			} finally {
 				_isSaving = false;
 			}
@@ -375,21 +345,21 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 		Debug.Print("Finished {0}", nameof(UpdateTask));
 	}
 
-	async Task ProcessUpdates(HashSet<IRealSettings> updated) {
+	void ProcessUpdates(HashSet<IRealSettings> updated) {
 		CheckLocation();
 
 		foreach (var item in updated) {
 			var intfType = item.GetInterfaceType();
-			if (!await TryGetPackAsync(intfType, item.SourceKey, out var pack).ConfigureAwait(false)) {
+			if (!TryGetPack(intfType, item.SourceKey, out var pack)) {
 				Debug.Fail("Unknown item in updated queue");
 				continue;
 			}
 
-			await ProcessUpdate(item, intfType, pack!);
+			ProcessUpdate(item, intfType, pack!);
 		}
 	}
 
-	async Task ProcessUpdate(IRealSettings settings, Type intfType, Pack pack) {
+	void ProcessUpdate(IRealSettings settings, Type intfType, Pack pack) {
 		try {
 			var path = pack.Path;
 			var real = pack.Settings;
@@ -397,7 +367,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 			if (settings.SourceKey is not null && fi.Directory is { Exists: false })
 				fi.Directory.Create();
 
-			await Serializer.Serialize(intfType, path, real).ConfigureAwait(false);
+			Serializer.Serialize(intfType, path, real);
 			pack.Changed = fi.LastWriteTime;
 			pack.Length = fi.Length;
 			Debug.Print("Saved {0} as {1}", intfType, real);
@@ -452,7 +422,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 			try {
 				(var list, _fsEvents) = (_fsEvents, new HashSet<FileSystemEventArgs>());
 				await Task.Delay(100, token); // idk wa or not
-				await ProcessEvents(list);
+				ProcessEvents(list);
 			} finally {
 				// _isUpdating = false;
 			}
@@ -461,7 +431,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 		Debug.Print("Finished {0}", nameof(ProcessFSEventsTask));
 	}
 
-	async Task ProcessEvents(HashSet<FileSystemEventArgs> list) {
+	void ProcessEvents(HashSet<FileSystemEventArgs> list) {
 		foreach (var item in list) {
 			try {
 				var path = item.FullPath;
@@ -484,7 +454,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 
 				if ((item.ChangeType & WatcherChangeTypes.Deleted) != 0) {
 					Debug.Print("* ({0}, {1}) externally removed from {2}", type, key, GetId());
-					await DeleteAsync(type, key);
+					Delete(type, key);
 				} else {
 					var fi = new FileInfo(path);
 					if (!fi.Exists) {
@@ -503,7 +473,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 					}
 
 					Debug.Print("* ({0}, {1}) externally changed in {2}", type, key, GetId());
-					var read = await Serializer.Deserialize(type, path);
+					var read = Serializer.Deserialize(type, path);
 					pack.Set(fi);
 					pack.Settings.Copy(read);
 				}

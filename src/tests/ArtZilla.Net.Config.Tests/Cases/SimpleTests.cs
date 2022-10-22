@@ -62,7 +62,7 @@ public sealed class SimpleTests : Core {
 	}
 
 	[TestMethod, Timeout(DefaultTimeout)]
-	public async Task JsonFileSerializerTest() {
+	public void JsonFileSerializerTest() {
 		var serializer = new JsonFileSerializer(new SameAssemblySettingsTypeConstructor());
 		var path = Path.GetTempFileName();
 		var type = typeof(ISimpleSettings);
@@ -70,10 +70,10 @@ public sealed class SimpleTests : Core {
 			Text = LongText
 		};
 
-		await serializer.Serialize(type, path, settings);
+		serializer.Serialize(type, path, settings);
 		{
 			var expected = settings.ToJsonString();
-			var actual = await File.ReadAllTextAsync(path);
+			var actual = File.ReadAllText(path);
 			Debug.Print("expected text: {0}", expected);
 			Debug.Print("actual text: {0}", actual);
 			Assert.AreEqual(expected, actual);
@@ -81,7 +81,7 @@ public sealed class SimpleTests : Core {
 
 		{
 			var expected = (ISimpleSettings) settings;
-			var actual = (ISimpleSettings) await serializer.Deserialize(type, path);
+			var actual = (ISimpleSettings) serializer.Deserialize(type, path);
 			Debug.Print("expected: {0}", expected);
 			Debug.Print("actual: {0}", actual);
 			Assert.AreEqual(expected.Text, actual.Text);
