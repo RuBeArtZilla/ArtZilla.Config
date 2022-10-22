@@ -74,6 +74,36 @@ public abstract class FileSettingsProviderTests<T> : SettingsProviderTest<T> whe
 	}
 
 	[TestMethod, Timeout(DefaultTimeout), DoNotParallelize]
+	public async Task SameLocationDictTest() {
+		string location;
+		var guid = Guid.NewGuid();
+		{
+			var provider = CreateUniqueProvider();
+			var expected = await provider.RealDictSettingsAsync();
+			var expectedSettings = expected.Map.AddNew(guid);
+			expectedSettings.Text = LongText;
+			await provider.FlushAsync();
+			Debug.Print("Expected: {0}", expected.ToJsonString());
+			location = provider.Location;
+
+			provider.TryDispose();
+		}
+
+		{
+			var provider2 = (T) Activator.CreateInstance(typeof(T), location)!;
+			var actual = await provider2.RealDictSettingsAsync();
+			Debug.Print("Actual: {0}", actual.ToJsonString());
+			Assert.AreEqual(3, actual.Map.Count);
+
+			var actualSettings = actual.Map[guid];
+			Assert.AreEqual(LongText, actualSettings.Text);
+
+			provider2.TryDispose();
+		}
+	}
+
+
+	[TestMethod, Timeout(DefaultTimeout), DoNotParallelize]
 	public async Task SameLocationDictSyncTest() {
 		var provider = CreateUniqueProvider();
 		var provider2 = (T) Activator.CreateInstance(typeof(T), provider.Location)!;

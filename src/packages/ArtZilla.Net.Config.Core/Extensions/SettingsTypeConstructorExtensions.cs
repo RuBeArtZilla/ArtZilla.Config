@@ -3,20 +3,31 @@ namespace ArtZilla.Net.Config;
 /// 
 public static class SettingsTypeConstructorExtensions {
 	///
-	public static ISettings Clone(this ISettingsTypeConstructor ctor, ISettings source, SettingsKind kind = SettingsKind.Copy)
+	public static ISettings Clone(this ISettingsTypeConstructor ctor, SettingsKind kind, ISettings source, ISettingsProvider sp, string? key = null)
+		=> ctor.Create(source.GetInterfaceType(), kind, sp, key, source);
+
+	///
+	public static ICopySettings CloneCopy(this ISettingsTypeConstructor ctor, ISettings source, ISettingsProvider sp, string? key = null)
+		=> (ICopySettings) ctor.Clone(SettingsKind.Copy, source, sp, key);
+
+	///
+	public static IRealSettings CloneReal(this ISettingsTypeConstructor ctor, ISettings source, ISettingsProvider sp, string? key = null)
+		=> (IRealSettings) ctor.Clone(SettingsKind.Real, source, sp, key);
+
+	///
+	public static ISettings FullClone(this ISettingsTypeConstructor ctor, ISettings source, SettingsKind kind = SettingsKind.Copy)
 		=> ctor.Create(source.GetInterfaceType(), kind, source.Source, source.SourceKey, source);
+	///
+	public static T FullClone<T>(this ISettingsTypeConstructor ctor, ISettings source, SettingsKind kind = SettingsKind.Copy)
+		where T : ISettings => (T) ctor.FullClone(source, kind);
 
 	///
-	public static T Clone<T>(this ISettingsTypeConstructor ctor, ISettings source, SettingsKind kind = SettingsKind.Copy)
-		where T : ISettings => (T) ctor.Clone(source, kind);
+	public static ICopySettings FullCloneCopy(this ISettingsTypeConstructor ctor, ISettings source)
+		=> (ICopySettings) ctor.FullClone(source, SettingsKind.Copy);
 
 	///
-	public static ICopySettings CloneCopy(this ISettingsTypeConstructor ctor, ISettings source)
-		=> (ICopySettings) ctor.Clone(source, SettingsKind.Copy);
-
-	///
-	public static IRealSettings CloneReal(this ISettingsTypeConstructor ctor, ISettings source)
-		=> (IRealSettings) ctor.Clone(source, SettingsKind.Real);
+	public static IRealSettings FullCloneReal(this ISettingsTypeConstructor ctor, ISettings source)
+		=> (IRealSettings) ctor.FullClone(source, SettingsKind.Real);
 
 	///
 	public static ISettings Default(this ISettingsTypeConstructor ctor, Type type, SettingsKind kind = SettingsKind.Copy, ISettingsProvider? provider = null, string? key = null)

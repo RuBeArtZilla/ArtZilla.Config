@@ -31,8 +31,7 @@ public class MemorySettingsProvider : SyncSettingsProviderBase {
 		var settings = Get(type, key);
 		return kind == SettingsKind.Real
 			? settings
-			: Constructor.Clone(settings, kind);
-
+			: Constructor.FullClone(settings, kind);
 	}
 
 	/// <inheritdoc />

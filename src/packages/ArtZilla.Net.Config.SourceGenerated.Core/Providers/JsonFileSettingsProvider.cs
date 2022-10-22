@@ -47,7 +47,7 @@ public sealed class JsonFileSerializer : FileSerializer {
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
 		var copy = settings.GetType() == copyType
 			? settings
-			: Constructor.CloneCopy(settings);
+			: Constructor.FullCloneCopy(settings);
 
 		using var stream = File.Create(path);
 		JsonSerializer.Serialize(stream, copy, copyType, _options);

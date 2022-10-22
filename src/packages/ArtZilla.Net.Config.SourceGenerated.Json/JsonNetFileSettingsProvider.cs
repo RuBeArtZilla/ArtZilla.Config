@@ -15,7 +15,7 @@ public class JsonNetFileSerializer : FileSerializer {
 		var copyType = Constructor.GetType(type, SettingsKind.Copy);
 		var copy = settings.GetType() == copyType
 			? settings
-			: Constructor.CloneCopy(settings);
+			: Constructor.FullCloneCopy(settings);
 
 		using var writer = File.CreateText(path);
 		using var jsonWriter = new JsonTextWriter(writer);

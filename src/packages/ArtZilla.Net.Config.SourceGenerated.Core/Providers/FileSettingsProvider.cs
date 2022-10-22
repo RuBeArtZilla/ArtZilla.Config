@@ -291,7 +291,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 		var path = GetPathToSettings(type, key);
 		var (source, size, time) = ReadAsync(type, path);
 		var settings = source is not null
-			? Constructor.CloneReal(source)
+			? Constructor.CloneReal(source, this, key)
 			: Constructor.DefaultReal(type, this, key);
 
 		Pack pack = new(settings, path) { Length = size, Changed = time };
@@ -301,7 +301,7 @@ public abstract class FileSettingsProvider : BaseSettingsProvider, IDisposable {
 		return pack;
 	}
 
-		(ISettings? Settings, long Size, DateTime Time) ReadAsync(Type type, string path) {
+	(ISettings? Settings, long Size, DateTime Time) ReadAsync(Type type, string path) {
 		try {
 			var fi = new FileInfo(path);
 			if (!fi.Exists)

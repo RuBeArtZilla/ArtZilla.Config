@@ -57,7 +57,7 @@ public sealed class SimpleTests : Core {
 		var ctor = new SameAssemblySettingsTypeConstructor();
 		var copy = ctor.Default<ISimpleSettings>();
 		copy.Text = "Marie Rose";
-		var read = ctor.Clone<ISimpleSettings>(copy);
+		var read = ctor.FullClone<ISimpleSettings>(copy);
 		Assert.AreEqual(copy.Text, read.Text);
 	}
 
