@@ -55,4 +55,16 @@ public static class SettingsExtensions {
 		settings.PropertyChanged -= handler;
 		return settings;
 	}
+
+	/// Subscribe to property changed event
+	public static TSettings SubscribeUnsafe<TSettings>(this TSettings settings, PropertyChangedEventHandler handler) where TSettings : ISettings {
+		((INotifyPropertyChanged) settings).PropertyChanged += handler;
+		return settings;
+	}
+
+	/// Unsubscribe from property changed event
+	public static TSettings UnsubscribeUnsafe<TSettings>(this TSettings settings, PropertyChangedEventHandler handler) where TSettings : ISettings {
+		((INotifyPropertyChanged) settings).PropertyChanged -= handler;
+		return settings;
+	}
 }

@@ -31,4 +31,10 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0-windows'">
     <DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET60_OR_GREATER;NET60</DefineConstants>
   </PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net7.0'">
+		<DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET60_OR_GREATER;NET70</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net7.0-windows'">
+		<DefineConstants>$(DefineConstants);NET50_OR_GREATER;NET60_OR_GREATER;NET70</DefineConstants>
+	</PropertyGroup>
 </Project>

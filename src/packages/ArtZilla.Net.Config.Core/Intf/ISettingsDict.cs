@@ -13,9 +13,6 @@ public interface ISettingsDict<TKey, TSettings>
 	: IReadOnlyDictionary<TKey, TSettings> 
 	where TSettings : class, ISettings 
 	where TKey : notnull {
-	
-	
-	
 	/// 
 	/// <param name="key"></param>
 	/// <returns></returns>

@@ -2,7 +2,7 @@
 	<Import Project="..\package.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0;netstandard2.0</TargetFrameworks>
 		<PackageIcon>Icon.png</PackageIcon>
 		<Summary>Configuration Framework (json part for emit generated configs)</Summary>
 		<Description>Configuration Framework (json part for emit generated configs)</Description>

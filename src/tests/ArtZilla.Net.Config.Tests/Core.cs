@@ -7,7 +7,7 @@ public abstract class Core {
 	protected const double NewDouble = 8;
 	protected const string NewString = "15";
 
-	public const int DefaultTimeout = 30_000;
+	public const int DefaultTimeout = 60_000;
 	public const string LongText = "Don't forget, always, somewhere, someone is fighting for you. "
 	                               + "As long as you remember her, you are not alone.";
 
